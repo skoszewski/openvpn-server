@@ -8,7 +8,7 @@ CLIENT_NAME="$1"
 # Define additional variables
 CERT_FILE="$CA_ROOT/certs/$CLIENT_NAME.crt"
 KEY_FILE="$CA_ROOT/private/$CLIENT_NAME-key.txt"
-OVPN_FILE="$CA_ROOT/configs/$CLIENT_NAME.ovpn"
+OVPN_FILE="$CA_ROOT/profiles/$CLIENT_NAME.ovpn"
 
 if [ -f "$CERT_FILE" ] || [ -f "$KEY_FILE" ] || [ -f "$OVPN_FILE" ]
 then

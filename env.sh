@@ -5,9 +5,6 @@ export OPENVPN_BASEDIR="/etc/openvpn/server"
 
 # CA Name
 export SUBJ_CN="OpenVPN CA 2022.03"
-export SUBJ_O="Medicover Sp. z o.o."
-export SUBJ_OU="Shared IT"
-export SUBJ_C="PL"
 
 # OpenVPN server information
 export SERVER_NAME="openvpn-poc"
