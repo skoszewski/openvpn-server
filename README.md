@@ -8,12 +8,6 @@ The scripts make creating a CA, issuing client certificates, creating OpenVPN co
 
 Review the `env.sh` file and make necessary changes. Add the following lines to the `[ req_dn ]` section of the `ca.conf` file, if you need more detailed distinguished names.
 
-```conf
-O = Example Company In.c
-OU = IT
-C = US
-```
-
 Run the `make-ca.sh` script to create a directory structure which will hold CA database. The CA root certificate will be created and self-signed.
 
 ## Operation

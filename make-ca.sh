@@ -52,12 +52,12 @@ REQ_FILE="$CA_ROOT/certs/server.req"
 CERT_FILE="$CA_ROOT/certs/server.crt"
 KEY_FILE="$CA_ROOT/private/server-key.txt"
 
-SUBJ_CN="$SERVER_NAME"
+SUBJ_CN="$SERVER_FQDN"
 
 # Create a certificate request
 openssl req -out "$REQ_FILE" -newkey rsa:2048 -nodes -keyout "$KEY_FILE" -config ca.conf
 
-# Sign the request
+# Sign the request (suppress output)
 openssl ca -in "$REQ_FILE" -out "$CERT_FILE" -notext -config ca.conf -extensions server_ext -batch
 
 # Remove the request file
