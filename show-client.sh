@@ -2,9 +2,11 @@
 
 # Define functions
 show_profile() {
-    if [ -f "$CA_ROOT/profiles/$BASE_NAME.ovpn" ]
+    OVPN_FILE="$CA_ROOT/profiles/$BASE_NAME.ovpn"
+
+    if [ -f $OVPN_FILE ]
     then
-        cat "$CA_ROOT/profiles/$BASE_NAME.ovpn"
+        cat "$OVPN_FILE"
     else
         echo "The profile for the specified client does not exist."
         exit 1
@@ -12,60 +14,65 @@ show_profile() {
 }
 
 show_certificate() {
-    if [ -f "$CA_ROOT/certs/$BASE_NAME.crt" ]
+    CERT_FILE="$CA_ROOT/certs/$BASE_NAME.crt"
+    
+    if [ -f "$CERT_FILE" ]
     then
-        openssl x509 -noout -text -nameopt multiline -certopt no_pubkey,no_sigdump -in "$CA_ROOT/certs/$BASE_NAME.crt"
+        openssl x509 -noout -text -nameopt multiline -certopt no_pubkey,no_sigdump -in "$CERT_FILE"
     else
         echo "The certificate for the specified client does not exist."
         exit 1
     fi
-
-    
 }
 
 usage() {
-    echo "Usage: $0 -n <client_name> [ -p ] [ -c ]"
+    echo "Usage: $0 [ -n <client_name> | -b <base_name> ] [ -p ] [ -c ]"
 }
 
 # Source environment variables
 . ./env.sh
 
-while getopts "cpn:" option
+while getopts "cn:b:h" option
 do
     case $option in
+        b)
+            BASE_NAME="$OPTARG"
+            ;;
         n)
             CLIENT_NAME="$OPTARG"
             ;;
-        p)
-            MODE="profile"
-            ;;
         c)
             MODE="certificate"
+            ;;
+        h)
+            usage
+            exit 0
+            ;;
     esac
 done
 
-if [ -z "$CLIENT_NAME" ]
+if [ -z "$CLIENT_NAME" ] && [ -z "$BASE_NAME" ]
 then
-    echo "ERROR: Client name not specified."
+    echo "ERROR: Client not specified."
     usage
     exit 1
 fi
 
-# Verify that the client name does not contain illegal characters.
-if echo $CLIENT_NAME | grep -q -v -P '^[a-zA-Z][a-zA-Z0-9 ()#_-]*[a-zA-Z0-9)]+$'
+if [ ! -z "$CLIENT_NAME" ]
 then
-    echo "ERROR: The client name must start with a letter, use only letters, numbers,"
-    echo "       dashes, underscores, a hash symbol (#) and parentheses."
-    exit 1
+    # Verify that the client name does not contain illegal characters.
+    if echo $CLIENT_NAME | grep -q -v -P '^[a-zA-Z][a-zA-Z0-9 ()#_-]*[a-zA-Z0-9)]+$'
+    then
+        echo "ERROR: The client name must start with a letter, use only letters, numbers,"
+        echo "       dashes, underscores, a hash symbol (#) and parentheses."
+        exit 1
+    fi
 fi
 
-# Calculate basename.
-BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
+# Calculate basename, if not defined.
+test -z "$BASE_NAME" && BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
 
 case $MODE in
-    profile)
-        show_profile
-        ;;
     certificate)
         show_certificate
         ;;

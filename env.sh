@@ -3,11 +3,19 @@ export CA_NAME="openvpn-ca"
 export CA_ROOT="$(pwd)/$CA_NAME"
 export OPENVPN_BASEDIR="/etc/openvpn/server"
 
-# CA Name
-export SUBJ_CN="OpenVPN CA 2022.03"
+# CA distinguished name
+# Subject name with the current Year.Month
+export SUBJ_CN="OpenVPN CA $(date +%Y.%m)"
+
+# Customize the company information below.
+export SUBJ_O="Example Company Inc."
+export SUBJ_OU="Shared IT"
+export SUBJ_C="PL"
 
 # OpenVPN server information
 export SERVER_NAME="openvpn-poc"
+export SERVER_FQDN="$SERVER_NAME.example.com"
+export SERVER_WWW_PROTOCOL="https"
 export SERVER_PROTOCOL="udp"
 export SERVER_PORT="1194"
 

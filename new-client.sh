@@ -1,15 +1,51 @@
 #!/usr/bin/env sh
 
+# Define functions
+usage() {
+    echo "Usage: $0 -n <client_name> -b <base_name>"
+}
+
 # Source environment variables
 . ./env.sh
 
-CLIENT_NAME="$1"
+while getopts "n:b:h" option
+do
+    case $option in
+        b)
+            BASE_NAME="$OPTARG"
+            ;;
+        n)
+            CLIENT_NAME="$OPTARG"
+            ;;
+        h)
+            usage
+            exit 0
+    esac
+done
+
+if [ -z "$CLIENT_NAME" ]
+then
+    echo "ERROR: Client name not specified."
+    usage
+    exit 1
+fi
+
+# Verify that the client name does not contain illegal characters.
+if echo $CLIENT_NAME | grep -q -v -P '^[a-zA-Z][a-zA-Z0-9 ()#_-]*[a-zA-Z0-9)]+$'
+then
+    echo "ERROR: The client name must start with a letter, use only letters, numbers,"
+    echo "       dashes, underscores, a hash symbol (#) and parentheses."
+    exit 1
+fi
+
+# Calculate basename, if not defined.
+test -z "$BASE_NAME" && BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
 
 # Define additional variables
-REQ_FILE="$CA_ROOT/certs/$CLIENT_NAME.req"
-CERT_FILE="$CA_ROOT/certs/$CLIENT_NAME.crt"
-KEY_FILE="$CA_ROOT/private/$CLIENT_NAME-key.txt"
-OVPN_FILE="$CA_ROOT/profiles/$CLIENT_NAME.ovpn"
+REQ_FILE="$CA_ROOT/certs/$BASE_NAME.req"
+CERT_FILE="$CA_ROOT/certs/$BASE_NAME.crt"
+KEY_FILE="$CA_ROOT/private/$BASE_NAME-key.txt"
+OVPN_FILE="$CA_ROOT/profiles/$BASE_NAME.ovpn"
 
 # Check if the client already exists
 if [ -f "$CERT_FILE" ] || [ -f "$KEY_FILE" ] || [ -f "$OVPN_FILE" ]
@@ -32,10 +68,12 @@ rm -f "$REQ_FILE"
 
 # Compose OpenVPN config file
 cat >> "$OVPN_FILE" <<EOF
+# Client Name: "$CLIENT_NAME"
+setenv PROFILE_NAME $BASE_NAME
 client
 dev tun
 proto $SERVER_PROTOCOL
-remote $SERVER_NAME $SERVER_PORT
+remote $SERVER_FQDN $SERVER_PORT
 data-ciphers AES-256-GCM:AES-256-CBC
 auth SHA256
 float
@@ -65,3 +103,15 @@ $(cat $CA_ROOT/ta.key)
 
 key-direction 1
 EOF
+
+echo ""
+echo "The certificate has been issued and an OpenVPN profile has been created."
+echo "use the command:"
+echo ""
+echo "./show-client.sh -n \"$CLIENT_NAME\""
+echo ""
+echo "or"
+echo ""
+echo "./show-client.sh -b \"$BASE_NAME\""
+echo ""
+echo "to write the profile to the screen."
