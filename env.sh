@@ -3,10 +3,6 @@ export CA_NAME="openvpn-ca"
 export CA_ROOT="$(pwd)/$CA_NAME"
 export OPENVPN_BASEDIR="/etc/openvpn/server"
 
-# CA distinguished name
-# Subject name with the current Year.Month
-export SUBJ_CN="OpenVPN CA $(date +%Y.%m)"
-
 # Customize the company information below.
 export SUBJ_O="Example Company Inc."
 export SUBJ_OU="Shared IT"

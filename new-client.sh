@@ -2,13 +2,13 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 -n <client_name> -b <base_name>"
+    echo "Usage: $0 -n <client_name> -b <base_name> [ -s <device_serial_number> ]"
 }
 
 # Source environment variables
 . ./env.sh
 
-while getopts "n:b:h" option
+while getopts "n:b:s:h" option
 do
     case $option in
         b)
@@ -16,6 +16,9 @@ do
             ;;
         n)
             CLIENT_NAME="$OPTARG"
+            ;;
+        s)
+            SERIAL_NUMBER="$OPTARG"
             ;;
         h)
             usage
@@ -39,7 +42,18 @@ then
 fi
 
 # Calculate basename, if not defined.
-test -z "$BASE_NAME" && BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
+if [ -z "$BASE_NAME" ]
+then
+    BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
+else
+    # Check the basename for correct format
+    if echo $BASE_NAME | grep -q -v -P '^[a-z][a-z0-9_]+$'
+    then
+        echo "ERROR: The base name must start with a letter and use only letters,"
+        echo "       numbers and underscores."
+        exit 1
+    fi
+fi
 
 # Define additional variables
 REQ_FILE="$CA_ROOT/certs/$BASE_NAME.req"
@@ -48,20 +62,28 @@ KEY_FILE="$CA_ROOT/private/$BASE_NAME-key.txt"
 OVPN_FILE="$CA_ROOT/profiles/$BASE_NAME.ovpn"
 
 # Check if the client already exists
-if [ -f "$CERT_FILE" ] || [ -f "$KEY_FILE" ] || [ -f "$OVPN_FILE" ]
+if [ -f "$OVPN_FILE" ] || [ -f "$CERT_FILE" ]
 then
     echo "The client $CLIENT_NAME already exists. Remove the old client before continuing."
     exit 1
 fi
 
 # Define Subject Common Name
-export SUBJ_CN="$CLIENT_NAME"
+SUBJECT_NAME="/CN=$BASE_NAME/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C/description=$CLIENT_NAME/serialNumber=$SERIAL_NUMBER"
 
 # Create a certificate request
-openssl req -out "$REQ_FILE" -newkey rsa:2048 -nodes -keyout "$KEY_FILE" -config ca.conf
+if ! openssl req -verbose -out "$REQ_FILE" -newkey rsa:2048 -nodes -keyout "$KEY_FILE" -config ca.conf -subj "$SUBJECT_NAME" -addext "subjectAltName=DNS:$BASE_NAME"
+then
+    echo "ERROR: Cannot create a certificate request."
+    exit 1
+fi
 
 # Sign the request
-openssl ca -in "$REQ_FILE" -out "$CERT_FILE" -config ca.conf -extensions client_ext -batch
+if ! openssl ca -in "$REQ_FILE" -out "$CERT_FILE" -extensions client_ext -config ca.conf -batch
+then
+    echo "ERROR: Cannot sign the certificate request."
+    exit 1
+fi
 
 # Remove the request file
 rm -f "$REQ_FILE"
