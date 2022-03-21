@@ -26,7 +26,7 @@ show_certificate() {
 }
 
 usage() {
-    echo "Usage: $0 [ -n <client_name> | -b <base_name> ] [ -p ] [ -c ]"
+    echo "Usage: $0 { -n <client_name> | -b <base_name> } [ -c ]"
 }
 
 # Source environment variables

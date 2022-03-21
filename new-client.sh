@@ -2,7 +2,7 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 -n <client_name> -b <base_name> [ -s <device_serial_number> ]"
+    echo "Usage: $0 -n <client_name> -b [ <base_name> ] [ -s <device_serial_number> ]"
 }
 
 # Source environment variables
