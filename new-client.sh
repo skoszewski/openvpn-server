@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Define functions
 usage() {
@@ -62,7 +62,7 @@ KEY_FILE="$CA_ROOT/private/$BASE_NAME-key.txt"
 OVPN_FILE="$CA_ROOT/profiles/$BASE_NAME.ovpn"
 
 # Check if the client already exists
-if [ -f "$OVPN_FILE" ] || [ -f "$CERT_FILE" ]
+if [ -f "$CERT_FILE" ]
 then
     echo "The client $CLIENT_NAME already exists. Remove the old client before continuing."
     exit 1
@@ -88,8 +88,8 @@ fi
 # Remove the request file
 rm -f "$REQ_FILE"
 
-# Compose OpenVPN config file
-cat >> "$OVPN_FILE" <<EOF
+# Compose and create or recreate the OpenVPN config file
+cat > "$OVPN_FILE" <<EOF
 # Client Name: "$CLIENT_NAME"
 setenv PROFILE_NAME $BASE_NAME
 client
