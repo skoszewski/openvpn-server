@@ -5,8 +5,12 @@ usage() {
     echo "Usage: $0 -n { <client_name> | -b <base_name> }"
 }
 
-# Source environment variables
-. ./env.sh
+# Check environment
+if test -z "$CA_ROOT"
+then
+    echo "ERROR: \$CA_ROOT not defined, please source the CA shell environment variables."
+    exit 1
+fi
 
 while getopts "n:b:h" option
 do

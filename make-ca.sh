@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-# Source environment variables
-. ./env.sh
+# Check environment
+if test -z "$CA_ROOT"
+then
+    echo "ERROR: \$CA_ROOT not defined, please source the CA shell environment variables."
+    exit 1
+fi
 
 # Create a directory for CA files
 if [ -d $CA_ROOT ]
