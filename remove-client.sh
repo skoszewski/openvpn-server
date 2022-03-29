@@ -67,6 +67,9 @@ then
         # Remove client certificate, key and OpenVPN configuration profile
         rm -f "$CERT_FILE"
         
+        # Calculate CRL location
+        CA_CRL="$CA_ROOT/$CA_NAME.crl"
+
         # Generate a new CRL
         openssl ca -config ca.conf -gencrl -out "$CA_CRL"
 

@@ -7,4 +7,4 @@ then
     exit 1
 fi
 
-openssl crl -noout -text -in "$CA_CRL"
+openssl crl -noout -text -in "$CA_ROOT/$CA_NAME.crl"

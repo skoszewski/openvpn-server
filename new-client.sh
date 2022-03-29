@@ -110,7 +110,7 @@ persist-tun
 verb 3
 
 <ca>
-$(openssl x509 -in $CA_CERT)
+$(openssl x509 -in $CA_ROOT/$CA_NAME.crt)
 </ca>
 
 <cert>

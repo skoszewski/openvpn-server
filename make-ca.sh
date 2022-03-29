@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Define functions
+usage() {
+    echo "Usage: $0 [ -s ] [ -c <certificate_file> ]"
+}
+
 # Check environment
 if test -z "$CA_ROOT"
 then
@@ -7,8 +12,43 @@ then
     exit 1
 fi
 
+# Calculate locations for CA key, certificate and CRL
+CA_CERT="$CA_ROOT/$CA_NAME.crt"
+CA_KEY="$CA_ROOT/private/$CA_NAME-key.txt"
+CA_CRL="$CA_ROOT/$CA_NAME.crl"
+
+unset SUB_CA
+
+while getopts "sc:h" option
+do
+    case $option in
+        c)
+            if [ -f "$OPTARG" ]
+            then
+                # Check if the file is a valid certificate
+                if ! openssl x509 -in "$OPTARG" -noout >/dev/null 2>&1
+                then
+                    echo "ERROR: The \"$OPTARG\" file is not a valid certificate."
+                    exit 1
+                fi
+            else
+                echo "ERROR: Specified file does not exist."
+                exit 1
+            fi
+
+            CERT_FILE="$OPTARG"
+            ;;
+        s)
+            SUB_CA=1
+            ;;
+        h)
+            usage
+            exit 0
+    esac
+done
+
 # Create a directory for CA files
-if [ -d $CA_ROOT ]
+if [ -d "$CA_ROOT" ] && [ -f "$CA_ROOT/index.txt" ] && [ -f "$CA_KEY" ] && [ -f "$CA_CERT" ]
 then
     read -p "The CA already exists, do you want to recreate it? " ans
     
@@ -21,76 +61,69 @@ then
     fi
 fi
 
-mkdir $CA_ROOT
+# CA does not exist or not fully initialized, create directory structure
+for d in "$CA_ROOT" "$CA_ROOT/newcerts" "$CA_ROOT/certs" "$CA_ROOT/private" "$CA_ROOT/profiles"
+do
+    if [ ! -d "$d" ]
+    then
+        mkdir "$d"
+    fi
+done
 
-# Create a new index, serial and subdirectories.
-touch "$CA_ROOT/index.txt" "$CA_ROOT/index.txt.attr"
-echo 01 > "$CA_ROOT/serial"
-mkdir -m 755 "$CA_ROOT/newcerts" "$CA_ROOT/certs"
-mkdir -m 750 "$CA_ROOT/private" "$CA_ROOT/profiles"
+# Secure private and profiles directories
+chmod 750 "$CA_ROOT/private" "$CA_ROOT/profiles"
 
 # Write .rnd file (if supported)
-openssl rand -writerand $CA_ROOT/.rnd 2>&1 1>&-
+openssl rand -writerand "$CA_ROOT/.rnd" 2>&1 1>&-
 
 # Subject name with the current Year.Month
-SUBJECT_NAME="/CN=OpenVPN CA $(date +%Y.%m)/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C/description=OpenVPN CA Root Certificate"
+SUBJECT_NAME="/CN=$CA_LONGNAME $(date +%Y.%m)/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C/description=$CA_LONGNAME Certificate"
 
-# Dummy BASE_NAME value
-# export BASE_NAME="$CA_NAME"
-
-# Generate a self-signed CA root certificate
-if ! openssl req -x509 -days 3650 -out "$CA_CERT" -newkey rsa:2048 -nodes -keyout "$CA_KEY" -config ca.conf -extensions v3_ca -subj "$SUBJECT_NAME"
+if [ -z "$SUB_CA" ]
 then
-    echo "ERROR: Cannot create a self-signed CA certificate."
-    exit 1
-fi
-
-# Generate DH parameter file.
-if [ -f "$OPENVPN_BASEDIR/dh.pem" ]
-then
-    read -p "The Diffie-Helman parameter file already exists, would you like to recreate it? " ans
-    if echo $ans | grep -q '^[Yy]'
+    if [ -f "$CA_KEY" ]
     then
-        sudo openssl dhparam -out "$OPENVPN_BASEDIR/dh.pem" 2048
-    fi
-fi
-
-# Generate static TLS key
-openvpn --genkey --secret "$CA_ROOT/ta.key"
-
-# Generate an empty CRL
-openssl ca -gencrl -config ca.conf -out "$CA_CRL"
-
-# Create a server certificate
-REQ_FILE="$CA_ROOT/certs/server.req"
-CERT_FILE="$CA_ROOT/certs/server.crt"
-KEY_FILE="$CA_ROOT/private/server-key.txt"
-
-SUBJECT_NAME="/CN=$SERVER_FQDN/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C/description=OpenVPN Server Root Certificate"
-
-# Create a server certificate request
-if openssl req -out "$REQ_FILE" -newkey rsa:2048 -nodes -keyout "$KEY_FILE" -config ca.conf -subj "$SUBJECT_NAME" -addext "subjectAltName=DNS:$SERVER_FQDN"
-then
-    # Sign the request (suppress output)
-    if ! openssl ca -in "$REQ_FILE" -out "$CERT_FILE" -notext -config ca.conf -extensions server_ext -batch
-    then
-        echo "ERROR: Cannot sign the server certificate request."
+        echo "ERROR: CA private key file exists. Cannot continue."
         exit 1
     fi
 
-    # Remove the request file
-    # rm -f "$REQ_FILE"
+    # Generate a self-signed CA root certificate
+    if ! openssl req -x509 -days 3650 -out "$CA_CERT" -newkey rsa:2048 -nodes -keyout "$CA_KEY" -config ca.conf -extensions v3_ca -subj "$SUBJECT_NAME"
+    then
+        echo "ERROR: Cannot create a self-signed CA certificate."
+        exit 1
+    fi
 else
-    echo "ERROR: Cannot create a server certificate request."
-    exit 1
+    if [ -z "$CERT_FILE" ]
+    then
+        if [ -f "$CA_KEY" ]
+        then
+            echo "ERROR: CA private key file exists. Cannot continue."
+            exit 1
+        fi
+
+        # Generate a certificate request
+        openssl req -new -out "$CA_ROOT/$CA_NAME.req" -newkey rsa:2048 -nodes -keyout "$CA_KEY" -config ca.conf -subj "$SUBJECT_NAME"
+
+        echo "Certificate request created. Sign it with the Root CA certificate."
+        # Print the request to the standard output.
+        openssl req -in "$CA_ROOT/$CA_NAME.req"
+        exit 0
+    else
+        if [ ! -f "$CA_KEY" ]
+        then
+            echo "ERROR: CA private key has been deleted. Cannot continue."
+            exit 1
+        fi
+
+        # Copy signed certificate file.
+        openssl x509 -in "$CERT_FILE" -out "$CA_CERT"
+    fi
 fi
 
-# Check, if the OpenVPN has been installed, and copy files.
-if [ -d "$OPENVPN_BASEDIR"  ]
-then
-    sudo cp $CA_CERT $OPENVPN_BASEDIR/ca.crt
-    sudo cp $CERT_FILE $OPENVPN_BASEDIR/server.crt
-    sudo cp $KEY_FILE $OPENVPN_BASEDIR/server.key
-    sudo cp $CA_CRL $OPENVPN_BASEDIR/crl.pem
-    sudo cp $CA_ROOT/ta.key $OPENVPN_BASEDIR
-fi
+# Create a new index, serial.
+touch "$CA_ROOT/index.txt" "$CA_ROOT/index.txt.attr"
+echo 01 > "$CA_ROOT/serial"
+
+# Generate an empty CRL
+openssl ca -gencrl -config ca.conf -out "$CA_CRL"
