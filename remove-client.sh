@@ -54,7 +54,7 @@ CERT_FILE="$CA_ROOT/certs/$BASE_NAME.crt"
 
 if [ -f "$CERT_FILE" ]
 then
-    echo "Found the client with the $(openssl x509 -nameopt multiline -certopt no_pubkey,no_sigdump -noout -text -in $CERT_FILE)\n"
+    echo -e "Found the client with the $(openssl x509 -nameopt multiline -certopt no_pubkey,no_sigdump -noout -text -in $CERT_FILE)\n"
 
     # Confirm the intent of removing the client
     read -p "Are you sure you want to remove the client ($BASE_NAME)? " ans

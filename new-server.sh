@@ -12,11 +12,6 @@ then
     exit 1
 fi
 
-# Calculate locations for CA key, certificate and CRL
-CA_CERT="$CA_ROOT/$CA_NAME.crt"
-CA_KEY="$CA_ROOT/private/$CA_NAME-key.txt"
-CA_CRL="$CA_ROOT/$CA_NAME.crl"
-
 while getopts "h" option
 do
     case $option in
