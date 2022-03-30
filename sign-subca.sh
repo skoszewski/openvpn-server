@@ -25,7 +25,7 @@ do
 done
 
 # Sing the certificate
-if openssl ca -config ca.conf -name "$CA_SECT" -in "$REQ_FILE" -extensions v3_ca -out "${REQ_FILE%.*}.crt"
+if openssl ca -config ca.conf -name "$CA_SECT" -in "$REQ_FILE" -extensions v3_end_ca -out "${REQ_FILE%.*}.crt"
 then
     # Remove the request file.
     rm -f "$REQ_FILE"

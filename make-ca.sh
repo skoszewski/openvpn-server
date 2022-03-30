@@ -2,7 +2,7 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 [ -s ] [ -c <certificate_file> ]"
+    echo "Usage: $0 [ -s ] [ -r ] [ -c <certificate_file> ]"
 }
 
 check_cert() {
@@ -13,7 +13,7 @@ check_cert() {
         CERT="$1"
     fi
 
-    test -f "$CERT" && return 1
+    test -f "$CERT" || return 1
 
     openssl x509 -in "$CERT" -noout 2>&-
 }
@@ -26,7 +26,7 @@ check_key() {
         KEY="$1"
     fi
 
-    test -f "$KEY" && return 1
+    test -f "$KEY" || return 1
     openssl rsa -in "$KEY" -noout 2>&-
 }
 
@@ -42,9 +42,9 @@ CA_CERT="$CA_ROOT/$CA_NAME.crt"
 CA_KEY="$CA_ROOT/private/$CA_NAME-key.txt"
 CA_CRL="$CA_ROOT/$CA_NAME.crl"
 
-unset SUB_CA
+unset SUB_CA ROOT_CA
 
-while getopts "sc:h" option
+while getopts "src:h" option
 do
     case $option in
         s)
@@ -52,6 +52,11 @@ do
             SUB_CA=1
             ;;
 
+        r)
+            # Mode: Root CA
+            ROOT_CA=1
+            ;;
+        
         c)
             CERT_FILE="$OPTARG"
             
@@ -85,6 +90,21 @@ do
             exit 0
     esac
 done
+
+# Check, if ROOT_CA and SUB_CA have not been specified simultaneously.
+if [ ! -z "$ROOT_CA" ] && [ ! -z "$SUB_CA" ]
+then
+    echo "ERROR: Root and Intermediate (Sub) CA mode cannot be specified at the same time."
+    exit 1
+fi
+
+# Set default CA extensions
+if [ -z "$ROOT_CA" ]
+then
+    CA_EXT="v3_end_ca"
+else
+    CA_EXT="v3_ca"
+fi
 
 # Create a directory for CA files
 if [ -d "$CA_ROOT" ] && [ -f "$CA_ROOT/index.txt" ] && check_key && check_cert
@@ -127,7 +147,7 @@ then
     fi
 
     # Generate a self-signed CA root certificate
-    if ! openssl req -x509 -days 3650 -out "$CA_CERT" -newkey rsa:2048 -nodes -keyout "$CA_KEY" -config ca.conf -extensions v3_ca -subj "$SUBJECT_NAME"
+    if ! openssl req -x509 -days 3650 -out "$CA_CERT" -newkey rsa:2048 -nodes -keyout "$CA_KEY" -config ca.conf -extensions "$CA_EXT" -subj "$SUBJECT_NAME"
     then
         echo "ERROR: Cannot create a self-signed CA certificate."
         exit 1
@@ -149,7 +169,7 @@ else
         fi
     else
         # Generate a certificate request
-        openssl req -new -out "$CA_ROOT/$CA_NAME.req" -newkey rsa:2048 -nodes -keyout "$CA_KEY" -config ca.conf -subj "$SUBJECT_NAME"
+        openssl req -new -out "$CA_ROOT/$CA_NAME.req" -newkey rsa:2048 -nodes -keyout "$CA_KEY" -config ca.conf -extensions "$CA_EXT" -subj "$SUBJECT_NAME"
 
         echo "Certificate request created. Sign it with the Root CA certificate."
         # Print the request to the standard output.
