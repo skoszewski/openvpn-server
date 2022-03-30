@@ -5,6 +5,31 @@ usage() {
     echo "Usage: $0 [ -s ] [ -c <certificate_file> ]"
 }
 
+check_cert() {
+    if [ -z "$1" ]
+    then
+        CERT="$CA_CERT"
+    else
+        CERT="$1"
+    fi
+
+    test -f "$CERT" && return 1
+
+    openssl x509 -in "$CERT" -noout 2>&-
+}
+
+check_key() {
+    if [ -z "$1" ]
+    then
+        KEY="$CA_KEY"
+    else
+        KEY="$1"
+    fi
+
+    test -f "$KEY" && return 1
+    openssl rsa -in "$KEY" -noout 2>&-
+}
+
 # Check environment
 if test -z "$CA_ROOT"
 then
@@ -22,25 +47,39 @@ unset SUB_CA
 while getopts "sc:h" option
 do
     case $option in
+        s)
+            # Mode: sub CA
+            SUB_CA=1
+            ;;
+
         c)
-            if [ -f "$OPTARG" ]
+            CERT_FILE="$OPTARG"
+            
+            # Check if the file is a valid certificate
+            if ! check_cert "$CERT_FILE"
             then
-                # Check if the file is a valid certificate
-                if ! openssl x509 -in "$OPTARG" -noout >/dev/null 2>&1
-                then
-                    echo "ERROR: The \"$OPTARG\" file is not a valid certificate."
-                    exit 1
-                fi
-            else
-                echo "ERROR: Specified file does not exist."
+                echo "ERROR: The \"$CERT_FILE\" file does not exit or is not a valid certificate."
                 exit 1
             fi
 
-            CERT_FILE="$OPTARG"
-            ;;
-        s)
+            # Check, if the first phase of initialization has been completed (the key exists)
+            if ! check_key
+            then
+                echo "ERROR: The CA private key does not exist."
+                exit 1
+            fi
+            
+            # Check, if the CA certificate already exists.
+            if check_cert
+            then
+                echo "ERROR: The CA certificate already exists."
+                exit 1
+            fi
+
+            # Mode: sub CA
             SUB_CA=1
             ;;
+
         h)
             usage
             exit 0
@@ -48,7 +87,7 @@ do
 done
 
 # Create a directory for CA files
-if [ -d "$CA_ROOT" ] && [ -f "$CA_ROOT/index.txt" ] && [ -f "$CA_KEY" ] && [ -f "$CA_CERT" ]
+if [ -d "$CA_ROOT" ] && [ -f "$CA_ROOT/index.txt" ] && check_key && check_cert
 then
     read -p "The CA already exists, do you want to recreate it? " ans
     
@@ -81,7 +120,7 @@ SUBJECT_NAME="/CN=$CA_LONGNAME $(date +%Y.%m)/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C/de
 
 if [ -z "$SUB_CA" ]
 then
-    if [ -f "$CA_KEY" ]
+    if check_key
     then
         echo "ERROR: CA private key file exists. Cannot continue."
         exit 1
@@ -94,30 +133,29 @@ then
         exit 1
     fi
 else
-    if [ -z "$CERT_FILE" ]
+    # Check, if the private key exists
+    if check_key
     then
-        if [ -f "$CA_KEY" ]
+        if ! check_cert
         then
-            echo "ERROR: CA private key file exists. Cannot continue."
-            exit 1
+            if [ ! -z "$CERT_FILE" ]
+            then
+                # Copy signed certificate file.
+                openssl x509 -in "$CERT_FILE" -out "$CA_CERT"
+            else
+                echo "ERROR: Certificate not found or not specified, cannot finish CA creation."
+                exit 1
+            fi
         fi
-
+    else
         # Generate a certificate request
         openssl req -new -out "$CA_ROOT/$CA_NAME.req" -newkey rsa:2048 -nodes -keyout "$CA_KEY" -config ca.conf -subj "$SUBJECT_NAME"
 
         echo "Certificate request created. Sign it with the Root CA certificate."
         # Print the request to the standard output.
         openssl req -in "$CA_ROOT/$CA_NAME.req"
-        exit 0
-    else
-        if [ ! -f "$CA_KEY" ]
-        then
-            echo "ERROR: CA private key has been deleted. Cannot continue."
-            exit 1
-        fi
 
-        # Copy signed certificate file.
-        openssl x509 -in "$CERT_FILE" -out "$CA_CERT"
+        exit 0
     fi
 fi
 
@@ -126,4 +164,4 @@ touch "$CA_ROOT/index.txt" "$CA_ROOT/index.txt.attr"
 echo 01 > "$CA_ROOT/serial"
 
 # Generate an empty CRL
-openssl ca -gencrl -config ca.conf -out "$CA_CRL"
+openssl ca -gencrl -config ca.conf -name "$CA_SECT" -out "$CA_CRL"

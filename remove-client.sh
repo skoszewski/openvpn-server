@@ -62,7 +62,7 @@ then
     if echo $ans | grep -q '^[yY]'
     then
         # Revoke the certificate
-        openssl ca -config ca.conf -revoke "$CERT_FILE" -crl_reason cessationOfOperation
+        openssl ca -config ca.conf -name "$CA_SECT" -revoke "$CERT_FILE" -crl_reason cessationOfOperation
 
         # Remove client certificate, key and OpenVPN configuration profile
         rm -f "$CERT_FILE"
@@ -71,7 +71,7 @@ then
         CA_CRL="$CA_ROOT/$CA_NAME.crl"
 
         # Generate a new CRL
-        openssl ca -config ca.conf -gencrl -out "$CA_CRL"
+        openssl ca -config ca.conf -name "$CA_SECT" -gencrl -out "$CA_CRL"
 
         # Copy CRL file to the OpenVPN server configuration directory
         if [ -d $OPENVPN_BASEDIR ]
