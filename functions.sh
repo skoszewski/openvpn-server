@@ -22,38 +22,51 @@ unset_env() {
     done
 }
 
-# Check, if a certifcate exists and is valid (defaults to CA certificate)
+# Check, if the certifcate exists and is valid (defaults to CA certificate)
 check_cert() {
-    # Check, if the needed variables are set.
-    check_env || return 1
-
     # Check the certificate, or CA certificate
     if [ -z "$1" ]
     then
+        # Check, if the needed variables are set.
+        check_env || return 1
+
         CERT="$CA_ROOT/$CA_NAME.crt"
     else
         CERT="$1"
     fi
 
-    echo Test if the file exists
     test -f "$CERT" || return 1
-
-    echo Test if the file is a valid certifcate
     openssl x509 -in "$CERT" -noout 2>&-
 }
 
 check_key() {
-    # Check, if the needed variables are set.
-    check_env || return 1
-
+    # Check, if the key exists and is valid (defaults to CA key)
     if [ -z "$1" ]
     then
+        # Check, if the needed variables are set.
+        check_env || return 1
+
         KEY="$CA_ROOT/private/$CA_NAME-key.txt"
     else
         KEY="$1"
     fi
 
     test -f "$KEY" || return 1
-
     openssl rsa -in "$KEY" -noout 2>&-
+}
+
+check_crl() {
+    # Check, if the CRL exists and is valid
+    if [ -z "$1" ]
+    then
+        # Check, if the needed variables are set.
+        check_env || return 1
+
+        CRL="$CA_ROOT/$CA_NAME.crl"
+    else
+        CRL="$1"
+    fi
+
+    test -f "$CRL" || return 1
+    openssl crl -in "$CRL" -noout 2>&-
 }
