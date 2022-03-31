@@ -11,6 +11,12 @@ check_env() {
         fi
     done
 
+    if [ "$1" = "-v" ]
+    then
+        echo "Using CA in \"$CA_ROOT\"."
+        echo ""
+    fi
+    
     return 0 # TRUE
 }
 
