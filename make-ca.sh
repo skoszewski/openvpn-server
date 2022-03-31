@@ -1,46 +1,18 @@
 #!/usr/bin/env bash
 
+. functions.sh
+
 # Define functions
 usage() {
     echo "Usage: $0 [ -s ] [ -r ] [ -c <certificate_file> ]"
 }
 
-check_cert() {
-    if [ -z "$1" ]
-    then
-        CERT="$CA_CERT"
-    else
-        CERT="$1"
-    fi
-
-    test -f "$CERT" || return 1
-
-    openssl x509 -in "$CERT" -noout 2>&-
-}
-
-check_key() {
-    if [ -z "$1" ]
-    then
-        KEY="$CA_KEY"
-    else
-        KEY="$1"
-    fi
-
-    test -f "$KEY" || return 1
-    openssl rsa -in "$KEY" -noout 2>&-
-}
-
-# Check environment
-if test -z "$CA_ROOT"
-then
-    echo "ERROR: \$CA_ROOT not defined, please source the CA shell environment variables."
-    exit 1
-fi
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 # Calculate locations for CA key, certificate and CRL
 CA_CERT="$CA_ROOT/$CA_NAME.crt"
 CA_KEY="$CA_ROOT/private/$CA_NAME-key.txt"
-CA_CRL="$CA_ROOT/$CA_NAME.crl"
 
 unset SUB_CA ROOT_CA
 
@@ -184,4 +156,4 @@ touch "$CA_ROOT/index.txt" "$CA_ROOT/index.txt.attr"
 echo 01 > "$CA_ROOT/serial"
 
 # Generate an empty CRL
-openssl ca -gencrl -config ca.conf -name "$CA_SECT" -out "$CA_CRL"
+openssl ca -gencrl -config ca.conf -name "$CA_SECT" -out "$CA_ROOT/$CA_NAME.crl"

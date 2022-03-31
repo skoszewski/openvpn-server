@@ -1,16 +1,14 @@
 #!/usr/bin/env bash
 
+. functions.sh
+
 # Define functions
 usage() {
     echo "Usage: $0 -n <client_name> -b [ <base_name> ] [ -s <device_serial_number> ]"
 }
 
-# Check environment
-if test -z "$CA_ROOT"
-then
-    echo "ERROR: \$CA_ROOT not defined, please source the CA shell environment variables."
-    exit 1
-fi
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 while getopts "n:b:s:h" option
 do

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+. functions.sh
+
 # Define functions
 usage() {
     echo "Usage: $0 [ -f <client_filter> ] "
@@ -7,12 +9,8 @@ usage() {
     echo "       NOTICE: The <client_filter> is an extended regular expression."
 }
 
-# Check environment
-if test -z "$CA_ROOT"
-then
-    echo "ERROR: \$CA_ROOT not defined, please source the CA shell environment variables."
-    exit 1
-fi
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 while getopts "hf:" option
 do
@@ -39,6 +37,7 @@ cat $CA_ROOT/index.txt | grep -i '^v' | cut -d/ -f2- | while read line
             do
                 if [ ! -z "$CLIENT_FILTER" ]
                 then
+                    # The filter MUST NOT BE quoted.
                     if [[ ! "$BASE_NAME" =~ $CLIENT_FILTER ]] && [[ ! "$CLIENT_NAME" =~ $CLIENT_FILTER ]]
                     then
                         # Both the BASE_NAME and the CLIENT_NAME do not match to the filter,
@@ -47,6 +46,11 @@ cat $CA_ROOT/index.txt | grep -i '^v' | cut -d/ -f2- | while read line
                     fi
                 fi
 
-                echo "$CLIENT_NAME [$BASE_NAME]"
+                if [ -z "$CLIENT_NAME" ]
+                then
+                    echo "[$BASE_NAME]"
+                else
+                    echo "$CLIENT_NAME [$BASE_NAME]"
+                fi
             done
     done

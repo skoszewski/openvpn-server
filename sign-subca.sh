@@ -1,15 +1,13 @@
 #!/usr/bin/env bash
 
+. functions.sh
+
 usage() {
     echo "Usage: $0 -r <request_file>"
 }
 
-# Check environment
-if test -z "$CA_ROOT"
-then
-    echo "ERROR: \$CA_ROOT not defined, please source the CA shell environment variables."
-    exit 1
-fi
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 while getopts "r:h" option
 do

@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-# Check environment
-if test -z "$CA_ROOT"
-then
-    echo "ERROR: \$CA_ROOT not defined, please source the CA shell environment variables."
-    exit 1
-fi
+. functions.sh
+
+# Check, if the environment has been sourced. Stop, if not.
+check_env || exit 1
 
 echo "Showing CA certificate from \"$CA_ROOT\":"
 echo ""
