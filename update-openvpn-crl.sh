@@ -4,10 +4,10 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 { -e | <ca_certificate_file> <crl_file> } [ -d <openvpn_server_config_dir> ] [ -H ]"
+    echo "Usage: $0 { -e | <ca_certificate_file> <crl_file> } [ -d <openvpn_server_config_dir> ] [ -H ] [ -c ]"
 }
 
-unset USE_HASH_AS_NAME
+unset USE_HASH_AS_NAME GEN_CRL
 
 # Set the default OpenVPN Server config directory
 OPENVPN_BASEDIR="/etc/openvpn/server"
@@ -18,6 +18,12 @@ then
 
     CA_CERT_FILE="$CA_ROOT/$CA_NAME.crt"
     CA_CRL_FILE="$CA_ROOT/$CA_NAME.crl"
+
+    # Automatically set USE_HASH_AS_NAME=1, if a sub CA is detected, or a CA designed as Root.
+    if is_sub_ca || [ "$CA_SECT" = "root_ca" ]
+    then
+        USE_HASH_AS_NAME=1
+    fi
 
     shift
 else
@@ -35,7 +41,7 @@ else
     shift
 fi
 
-while getopts "d:Hh" option
+while getopts "d:Hch" option
 do
     case $option in
         d)
@@ -43,6 +49,9 @@ do
             ;;
         H)
             USE_HASH_AS_NAME=1
+            ;;
+        c)
+            GEN_CRL=1
             ;;
         h)
             usage
@@ -54,6 +63,22 @@ if ! check_cert $CA_CERT_FILE
 then
     echo "ERROR: The CA certificate does not exist or is not valid."
     exit 1
+fi
+
+if [ ! -z "$GEN_CRL" ]
+then
+    if ! check_env
+    then
+        echo "ERROR: The CA envrionment hasn't been sourced. The CRL cannot be generated."
+        exit 1
+    fi
+
+    # Generate, a new CRL.
+    if ! gen_crl
+    then
+        echo "ERROR: Cannot generate a new CRL file."
+        exit 1
+    fi
 fi
 
 if ! check_crl $CA_CRL_FILE

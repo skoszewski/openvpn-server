@@ -30,49 +30,83 @@ unset_env() {
 
 # Check, if the certifcate exists and is valid (defaults to CA certificate)
 check_cert() {
-    # Check the certificate, or CA certificate
-    if [ -z "$1" ]
-    then
-        # Check, if the needed variables are set.
-        check_env || return 1
+    local CERT="$1"
 
-        CERT="$CA_ROOT/$CA_NAME.crt"
-    else
-        CERT="$1"
-    fi
-
+    test -n "$CERT" || return 1
     test -f "$CERT" || return 1
     openssl x509 -in "$CERT" -noout 2>&-
 }
 
+check_ca_cert() {
+    check_env || return 1
+    check_cert "$CA_ROOT/$CA_NAME.crt"
+}
+
 check_key() {
-    # Check, if the key exists and is valid (defaults to CA key)
-    if [ -z "$1" ]
-    then
-        # Check, if the needed variables are set.
-        check_env || return 1
-
-        KEY="$CA_ROOT/private/$CA_NAME-key.txt"
-    else
-        KEY="$1"
-    fi
-
+    local KEY="$1"
+    
+    test -n "$KEY" || return 1
     test -f "$KEY" || return 1
     openssl rsa -in "$KEY" -noout 2>&-
 }
 
+check_ca_key() {
+    check_env || return 1
+    check_key "$CA_ROOT/private/$CA_NAME-key.txt"
+}
+
 check_crl() {
     # Check, if the CRL exists and is valid
-    if [ -z "$1" ]
-    then
-        # Check, if the needed variables are set.
-        check_env || return 1
+    local CRL="$1"
 
-        CRL="$CA_ROOT/$CA_NAME.crl"
-    else
-        CRL="$1"
-    fi
-
+    test -n "$CRL" || return 1
     test -f "$CRL" || return 1
     openssl crl -in "$CRL" -noout 2>&-
+}
+
+check_ca_crl() {
+    check_env || return 1
+    check_crl "$CA_ROOT/$CA_NAME.crl"
+}
+
+gen_crl() {
+    # Generate, a new CRL
+    check_env || return 1
+
+    # Generate, a new CRL.
+    openssl ca -config ca.conf -name "$CA_SECT" -gencrl -out "$CA_ROOT/$CA_NAME.crl"
+}
+
+# Check, if the CA certificate is signed by another CA
+is_sub_ca() {
+    local CA_CERT_FILE
+
+    # Read subject hash and issuer hash to an array
+    if check_cert "$1"
+    then
+        CA_CERT_FILE="$1"
+    else
+        CA_CERT_FILE="$CA_ROOT/$CA_NAME.crt"
+    fi
+    echo "DEBUG: CA_CERT_FILE=$CA_CERT_FILE"
+    # SUBJECT_HASH=$(openssl x509 -in "$CA_CERT_FILE" -noout -subject_hash)
+    # ISSUER_HASH=$(openssl x509 -in "$CA_CERT_FILE" -noout -issuer_hash)
+    # test $SUBJECT_HASH != $ISSUER_HASH
+    HASHES=($(openssl x509 -in "$CA_CERT_FILE" -noout -subject_hash -issuer_hash))
+    test ${HASHES[0]} != ${HASHES[1]}
+}
+
+revoke_cert() {
+    check_env || return 1
+
+    local CERT_FILE="$1"
+
+    if check_cert "$CERT_FILE"
+    then
+        # Revoke the certificate
+        openssl ca -config ca.conf -name "$CA_SECT" -revoke "$CERT_FILE" -crl_reason cessationOfOperation
+
+        # Generate a new CRL
+        openssl ca -config ca.conf -name "$CA_SECT" -gencrl -out "$CA_ROOT/$CA_NAME.crl"
+    fi
 }

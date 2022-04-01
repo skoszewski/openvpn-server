@@ -65,16 +65,16 @@ then
         # Remove client certificate, key and OpenVPN configuration profile
         rm -f "$CERT_FILE"
         
-        # Calculate CRL location
-        CA_CRL="$CA_ROOT/$CA_NAME.crl"
-
         # Generate a new CRL
-        openssl ca -config ca.conf -name "$CA_SECT" -gencrl -out "$CA_CRL"
-
-        # Copy CRL file to the OpenVPN server configuration directory
-        if [ -d $OPENVPN_BASEDIR ]
+        if gen_crl
         then
-            sudo cp $CA_CRL $OPENVPN_BASEDIR/crl.pem
+            # Copy CRL file to the OpenVPN server configuration directory
+            if [ -d $OPENVPN_BASEDIR ]
+            then
+                sudo cp "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_BASEDIR/crl.pem"
+            fi
+        else
+            echo "ERROR: Cannot generate a new CRL."
         fi
     else
         exit 0

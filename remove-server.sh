@@ -54,7 +54,7 @@ then
 
     # Revoke the certificate and generate a new CRL
     openssl ca -config ca.conf -name "$CA_SECT" -revoke "$CERT_FILE" -crl_reason cessationOfOperation
-    openssl ca -config ca.conf -name "$CA_SECT" -gencrl -out "$CA_ROOT/$CA_NAME.crl"
+    gen_crl
     echo -e "\nNOTICE: Certificate revoked. Remember to publish the new CRL immediately !"
 
     # Remove client certificate, key and OpenVPN configuration profile

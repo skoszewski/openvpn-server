@@ -40,14 +40,14 @@ do
             fi
 
             # Check, if the first phase of initialization has been completed (the key exists)
-            if ! check_key
+            if ! check_ca_key
             then
                 echo "ERROR: The CA private key does not exist."
                 exit 1
             fi
             
             # Check, if the CA certificate already exists.
-            if check_cert
+            if check_ca_cert
             then
                 echo "ERROR: The CA certificate already exists."
                 exit 1
@@ -79,7 +79,7 @@ else
 fi
 
 # Create a directory for CA files
-if [ -d "$CA_ROOT" ] && [ -f "$CA_ROOT/index.txt" ] && check_key && check_cert
+if [ -d "$CA_ROOT" ] && [ -f "$CA_ROOT/index.txt" ] && check_ca_key && check_ca_cert
 then
     read -p "The CA already exists, do you want to recreate it? " ans
     
@@ -126,11 +126,11 @@ then
     fi
 else
     # Check, if the private key exists
-    if check_key
+    if check_ca_key
     then
-        if ! check_cert
+        if ! check_ca_cert
         then
-            if [ ! -z "$CERT_FILE" ]
+            if [ -n "$CERT_FILE" ]
             then
                 # Copy signed certificate file.
                 openssl x509 -in "$CERT_FILE" -out "$CA_CERT"
