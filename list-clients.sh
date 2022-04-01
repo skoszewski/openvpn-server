@@ -9,9 +9,6 @@ usage() {
     echo "       NOTICE: The <client_filter> is an extended regular expression."
 }
 
-# Check, if the environment has been sourced. Stop, if not.
-check_env -v || exit 1
-
 while getopts "hf:" option
 do
     case $option in
@@ -23,6 +20,9 @@ do
             exit 0
     esac
 done
+
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 # Parse CA's index.txt file. Filter valid certificates. Apply end-user specified regex and display.
 cat $CA_ROOT/index.txt | grep -i '^v' | cut -d/ -f2- | while read line

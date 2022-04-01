@@ -7,14 +7,7 @@ usage() {
     echo "Usage: $0 [ -s ] [ -r ] [ -c <certificate_file> ]"
 }
 
-# Check, if the environment has been sourced. Stop, if not.
-check_env -v || exit 1
-
-# Calculate locations for CA key, certificate and CRL
-CA_CERT="$CA_ROOT/$CA_NAME.crt"
-CA_KEY="$CA_ROOT/private/$CA_NAME-key.txt"
-
-unset SUB_CA ROOT_CA
+unset SUB_CA ROOT_CA CERT_FILE
 
 while getopts "src:h" option
 do
@@ -31,30 +24,6 @@ do
         
         c)
             CERT_FILE="$OPTARG"
-            
-            # Check if the file is a valid certificate
-            if ! check_cert "$CERT_FILE"
-            then
-                echo "ERROR: The \"$CERT_FILE\" file does not exit or is not a valid certificate."
-                exit 1
-            fi
-
-            # Check, if the first phase of initialization has been completed (the key exists)
-            if ! check_ca_key
-            then
-                echo "ERROR: The CA private key does not exist."
-                exit 1
-            fi
-            
-            # Check, if the CA certificate already exists.
-            if check_ca_cert
-            then
-                echo "ERROR: The CA certificate already exists."
-                exit 1
-            fi
-
-            # Mode: sub CA
-            SUB_CA=1
             ;;
 
         h)
@@ -62,6 +31,40 @@ do
             exit 0
     esac
 done
+
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
+
+# Calculate locations for CA key, certificate and CRL
+CA_CERT="$CA_ROOT/$CA_NAME.crt"
+CA_KEY="$CA_ROOT/private/$CA_NAME-key.txt"
+
+if [ -n "$CERT_FILE" ]
+then
+    # Check if the file is a valid certificate
+    if ! check_cert "$CERT_FILE"
+    then
+        echo "ERROR: The \"$CERT_FILE\" file does not exit or is not a valid certificate."
+        exit 1
+    fi
+
+    # Check, if the first phase of initialization has been completed (the key exists)
+    if ! check_ca_key
+    then
+        echo "ERROR: The CA private key does not exist."
+        exit 1
+    fi
+
+    # Check, if the CA certificate already exists.
+    if check_ca_cert
+    then
+        echo "ERROR: The CA certificate already exists."
+        exit 1
+    fi
+
+    # Mode: sub CA
+    SUB_CA=1
+fi
 
 # Check, if ROOT_CA and SUB_CA have not been specified simultaneously.
 if [ ! -z "$ROOT_CA" ] && [ ! -z "$SUB_CA" ]

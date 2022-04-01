@@ -8,9 +8,6 @@ usage() {
     echo "Usage: $0 [ -s <server_fqdn> ] [ -r ] [ -c ]"
 }
 
-# Check, if the environment has been sourced. Stop, if not.
-check_env -v || exit 1
-
 unset ROOT_CA COPY_ONLY
 
 while getopts "rs:ch" option
@@ -38,6 +35,9 @@ do
             exit 0
     esac
 done
+
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 # Use FQDN with replaced dots and dashes as a base name for files.
 BASE_NAME="${SERVER_FQDN//./_}"

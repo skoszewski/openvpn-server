@@ -7,9 +7,6 @@ usage() {
     echo "Usage: $0 -n { <client_name> | -b <base_name> }"
 }
 
-# Check, if the environment has been sourced. Stop, if not.
-check_env -v || exit 1
-
 while getopts "n:b:h" option
 do
     case $option in
@@ -33,7 +30,7 @@ then
     exit 1
 fi
 
-if [ ! -z "$CLIENT_NAME" ]
+if [ -n "$CLIENT_NAME" ]
 then
     # Verify that the client name does not contain illegal characters.
     if echo $CLIENT_NAME | grep -q -v -P '^[a-zA-Z][a-zA-Z0-9 ()#_-]*[a-zA-Z0-9)]+$'
@@ -46,6 +43,9 @@ fi
 
 # Calculate basename, if not defined.
 test -z "$BASE_NAME" && BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
+
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 # Define additional variables
 CERT_FILE="$CA_ROOT/certs/$BASE_NAME.crt"

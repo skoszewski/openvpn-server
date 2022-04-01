@@ -6,9 +6,6 @@ usage() {
     echo "Usage: $0 -r <request_file>"
 }
 
-# Check, if the environment has been sourced. Stop, if not.
-check_env -v || exit 1
-
 while getopts "r:h" option
 do
     case $option in
@@ -21,6 +18,9 @@ do
             ;;
     esac
 done
+
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 # Sing the certificate
 if openssl ca -config ca.conf -name "$CA_SECT" -in "$REQ_FILE" -extensions v3_end_ca -out "${REQ_FILE%.*}.crt"

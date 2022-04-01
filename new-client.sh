@@ -7,9 +7,6 @@ usage() {
     echo "Usage: $0 -n <client_name> -b [ <base_name> ] [ -s <device_serial_number> ]"
 }
 
-# Check, if the environment has been sourced. Stop, if not.
-check_env -v || exit 1
-
 while getopts "n:b:s:h" option
 do
     case $option in
@@ -56,6 +53,9 @@ else
         exit 1
     fi
 fi
+
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 # Define additional variables
 REQ_FILE="$CA_ROOT/certs/$BASE_NAME.req"

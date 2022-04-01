@@ -4,7 +4,7 @@
 
 # Define functions
 show_profile() {
-    OVPN_FILE="$CA_ROOT/profiles/$BASE_NAME.ovpn"
+    local OVPN_FILE="$CA_ROOT/profiles/$BASE_NAME.ovpn"
 
     if [ -f $OVPN_FILE ]
     then
@@ -16,7 +16,7 @@ show_profile() {
 }
 
 show_certificate() {
-    CERT_FILE="$CA_ROOT/certs/$BASE_NAME.crt"
+    local CERT_FILE="$CA_ROOT/certs/$BASE_NAME.crt"
     
     if [ -f "$CERT_FILE" ]
     then
@@ -30,9 +30,6 @@ show_certificate() {
 usage() {
     echo "Usage: $0 { -n <client_name> | -b <base_name> } [ -c ]"
 }
-
-# Check, if the environment has been sourced. Stop, if not.
-check_env -v || exit 1
 
 while getopts "cn:b:h" option
 do
@@ -73,6 +70,9 @@ fi
 
 # Calculate basename, if not defined.
 test -z "$BASE_NAME" && BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
+
+# Check, if the environment has been sourced. Stop, if not.
+check_env -v || exit 1
 
 case $MODE in
     certificate)
