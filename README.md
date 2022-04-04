@@ -4,7 +4,7 @@ This set of scripts has been derived from the open source project available at [
 
 The scripts are:
 
-* `env.sh` - common variables
+* `*.env` - shell environment initialization files.
 * `make-ca.sh` - make CA and issue a server certificate.
 * `new-client.sh` - register a new client, issue a certificate and compose an OpenVPN profile.
 * `list-clients.sh` - list currently active clients with an optional name filter.
