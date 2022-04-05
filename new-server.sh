@@ -92,7 +92,8 @@ then
         read -p "The Diffie-Helman parameter file already exists, would you like to recreate it? " ans
         if echo $ans | grep -q '^[Yy]'
         then
-            sudo openssl dhparam -out "$OPENVPN_BASEDIR/dh.pem" 2048
+            openssl dhparam -out "$CA_ROOT/dh.pem" 2048
+            sudo cp -uv "$CA_ROOT/dh.pem" "$OPENVPN_BASEDIR/dh.pem"
         fi
     fi
 
@@ -102,7 +103,8 @@ then
         read -p "The OpenVPN static TLS key already exists, would you like to recreate it? " ans
         if echo $ans | grep -q '^[Yy]'
         then
-            sudo openvpn --genkey --secret "$OPENVPN_BASEDIR/ta.key"
+            openvpn --genkey --secret "$CA_ROOT/ta.key"
+            sudo cp -uv "$CA_ROOT/ta.key" "$OPENVPN_BASEDIR/ta.key"
         fi
     fi
 

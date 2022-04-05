@@ -57,6 +57,20 @@ fi
 # Check, if the environment has been sourced. Stop, if not.
 check_env -v || exit 1
 
+# Check, the CA certificate
+if ! check_ca_cert
+then
+    echo "ERROR: The CA certifcate is missing or is invalid."
+    exit 1
+fi
+
+# Check, if the TLS key has been created.
+if [ ! -f "$CA_ROOT/ta.key" ]
+then
+    echo "ERROR: The TLS key is missing."
+    exit 1
+fi
+
 # Define additional variables
 REQ_FILE="$CA_ROOT/certs/$BASE_NAME.req"
 CERT_FILE="$CA_ROOT/certs/$BASE_NAME.crt"
