@@ -104,52 +104,8 @@ fi
 # Remove the request file
 rm -f "$REQ_FILE"
 
-# Compose and create or recreate the OpenVPN config file
-cat > "$OVPN_FILE" <<EOF
-# Client Name: "$CLIENT_NAME"
-setenv PROFILE_NAME $BASE_NAME
-client
-dev tun
-proto $SERVER_PROTOCOL
-remote $SERVER_FQDN $SERVER_PORT
-data-ciphers AES-256-GCM:AES-256-CBC
-auth SHA256
-float
-resolv-retry infinite
-nobind
-persist-key
-persist-tun
-verb 3
-
-<ca>
-$(openssl x509 -in $CA_ROOT/$CA_NAME.crt)
-</ca>
-
-<cert>
-$(openssl x509 -in $CERT_FILE)
-</cert>
-
-<key>
-$(openssl rsa -in $KEY_FILE)
-</key>
-
-remote-cert-eku "TLS Web Server Authentication"
-
-<tls-auth>
-$(cat $CA_ROOT/ta.key)
-</tls-auth>
-
-key-direction 1
-EOF
-
-echo ""
-echo "The certificate has been issued and an OpenVPN profile has been created."
-echo "use the command:"
-echo ""
-echo "./show-client.sh -n \"$CLIENT_NAME\""
-echo ""
-echo "or"
-echo ""
-echo "./show-client.sh -b \"$BASE_NAME\""
-echo ""
-echo "to write the profile to the screen."
+echo -e "\nThe certificate has been issued."
+echo -e "You can print an OpenVPN profile using following the command:\n"
+echo -e "./show-client.sh -n \"$CLIENT_NAME\"\n"
+echo -e "or\n"
+echo -e "./show-client.sh -b \"$BASE_NAME\"\n"

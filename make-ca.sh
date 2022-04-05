@@ -96,7 +96,7 @@ then
 fi
 
 # CA does not exist or not fully initialized, create directory structure
-for d in "$CA_ROOT" "$CA_ROOT/newcerts" "$CA_ROOT/certs" "$CA_ROOT/private" "$CA_ROOT/profiles"
+for d in "$CA_ROOT" "$CA_ROOT/newcerts" "$CA_ROOT/certs" "$CA_ROOT/private"
 do
     if [ ! -d "$d" ]
     then
@@ -104,8 +104,8 @@ do
     fi
 done
 
-# Secure private and profiles directories
-chmod 750 "$CA_ROOT/private" "$CA_ROOT/profiles"
+# Secure the private directory
+chmod 750 "$CA_ROOT/private"
 
 # Write .rnd file (if supported)
 openssl rand -writerand "$CA_ROOT/.rnd" 2>&1 1>&-

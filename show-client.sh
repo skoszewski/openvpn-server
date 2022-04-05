@@ -4,15 +4,42 @@
 
 # Define functions
 show_profile() {
-    local OVPN_FILE="$CA_ROOT/profiles/$BASE_NAME.ovpn"
+    # Compose and create or recreate the OpenVPN config file
+    cat <<EOF
+# Client Name: "$CLIENT_NAME"
+setenv PROFILE_NAME $BASE_NAME
+client
+dev tun
+proto $SERVER_PROTOCOL
+remote $SERVER_FQDN $SERVER_PORT
+data-ciphers AES-256-GCM:AES-256-CBC
+auth SHA256
+float
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+verb 3
+remote-cert-eku "TLS Web Server Authentication"
 
-    if [ -f $OVPN_FILE ]
-    then
-        cat "$OVPN_FILE"
-    else
-        echo "The profile for the specified client does not exist."
-        exit 1
-    fi
+<ca>
+$(openssl x509 -in "$CA_ROOT/$CA_NAME.crt")
+</ca>
+
+<cert>
+$(openssl x509 -in "$CA_ROOT/certs/$BASE_NAME.crt")
+</cert>
+
+<key>
+$(openssl rsa -in "$CA_ROOT/private/$BASE_NAME-key.txt" 2>&-)
+</key>
+
+<tls-auth>
+$(cat $CA_ROOT/ta.key)
+</tls-auth>
+
+key-direction 1
+EOF
 }
 
 show_certificate() {
@@ -72,7 +99,7 @@ fi
 test -z "$BASE_NAME" && BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
 
 # Check, if the environment has been sourced. Stop, if not.
-check_env -v || exit 1
+check_env || exit 1
 
 case $MODE in
     certificate)
