@@ -185,7 +185,7 @@ An example:
 
 `udp-1194.conf`
 
-for a daemon running on port 1194 and using UDP protocol.
+for a daemon running on port `1194` and using UDP protocol. The following example configures a daemon running on a host with the IP `192.168.10.30` (WAN-side). The local network is `192.168.4.0/24` and the VPN pool has been assigned from the `192.168.233.0/24` network. The VPN dynamic IP pool range has been reduced to `192.168.233.100 - 192.168.233.199`.
 
 ```ini
 config common.inc
@@ -200,3 +200,21 @@ ifconfig-pool 192.168.233.100 192.168.233.199
 
 log /var/log/openvpn/udp-1194.log
 ```
+
+Uncomment the following line in the `/etc/sysctl.conf` file:
+
+```
+net.ipv4.ip_forward=1
+```
+
+Initialize the CA and issue a server certificate. All deamons will use the same certificate.
+
+Configura OpenVPN service for the defined daemon(s).
+
+```shell
+sudo systemctl enable --now openvpn-server@udp-1194
+sudo systemctl start openvpn-server@udp-1194
+sudo systemctl status openvpn-server@udp-1194
+```
+
+You should have the OpenVPN daemons up and running.
