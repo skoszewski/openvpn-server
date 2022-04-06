@@ -1,4 +1,14 @@
-# OpenVPN CA
+# OpenVPN access server and supporting CA
+
+OpenVPN Access Server is a product name of the OpenVPN Inc. The *OpenVPN access server* (notice small caps) is a generic name for a VPN access server using OpenVPN software as a core service. Reliable operation of the OpenVPN access server requires a Public Key Infrastructure.
+
+The following documentation describes both the CA setup and the OpenVPN access server setup. We will use Ubuntu LTS operating system without any external software dependencies.
+
+Setup a VM running **18.04 LTS** or **20.04 LTS** Ubuntu releases. Copy the scripts to a directory not accessible by any other users.
+
+> NOTE: You should not allow any non-admin logins to the server.
+
+## CA Setup
 
 This set of scripts has been derived from the open source project available at [https://github.com/skoszewski/sk-ca-scripts](https://github.com/skoszewski/sk-ca-scripts).
 
@@ -6,43 +16,42 @@ The scripts are:
 
 * `*.env` - shell environment initialization files.
 * `make-ca.sh` - make CA and issue a server certificate.
-* `new-client.sh` - register a new client, issue a certificate and compose an OpenVPN profile.
+* `new-client.sh` - register a new client and issue a certificate.
 * `list-clients.sh` - list currently active clients with an optional name filter.
 * `show-client.sh` - print the client OpenVPN profile or the certificate to the screen.
 * `remove-client.sh` - remove the client information, revoke its certificate and generate a new CRL.
 * `show-crl.sh` - print the textual representation of the CRL
+* `new-server.sh` - register a new server and issue a certificate.
+* `remove-server.sh` - remove the server information, revoke its certificate and generate a new CRL.
 
-## Setup
+### Initialization
 
 Review the `env.sh` file and make necessary changes. At least customize `SUBJ_*` and `SERVER_*` variables.
 
 ```conf
 # Basic variables 
 export CA_NAME="openvpn-ca"
+export CA_LONGNAME="OpenVPN CA"
 export CA_ROOT="$(pwd)/$CA_NAME"
-export OPENVPN_BASEDIR="/etc/openvpn/server"
+export CA_SECT="openvpn_ca"
 
 # Customize the company information below.
 export SUBJ_O="Example Company Inc."
 export SUBJ_OU="Shared IT"
 export SUBJ_C="PL"
 
-# OpenVPN server information
+# CRL and AIA server information
 export SERVER_NAME="openvpn-poc"
 export SERVER_FQDN="$SERVER_NAME.example.com"
 export SERVER_WWW_PROTOCOL="https"
+
+# OpenVPN server information
+export OPENVPN_BASEDIR="/etc/openvpn/server"
 export SERVER_PROTOCOL="udp"
 export SERVER_PORT="1194"
-
-# CA information
-export CA_CERT="$CA_ROOT/certs/$CA_NAME.crt"
-export CA_KEY="$CA_ROOT/private/$CA_NAME-key.txt"
-export CA_CRL="$CA_ROOT/$CA_NAME.crl"
 ```
 
 Run the `make-ca.sh` script to create a directory structure which will hold CA database. The CA root and the server certificate will be created.
-
-## Operation
 
 ### Create a new client
 
@@ -58,7 +67,7 @@ Usage:
 * `base_name` - an optional base name for certificate and OpenVPN profile files. You can only use lower case letters, numbers and an underscore. The name must start with a letter. The base name will be automatically generated from the client name if a `base_name` is not specified.
 * `device_serial_number` - the device's serial number.
 
-The certificate file is located in `<ca_root>/certs` directory, the private key in `<ca_root>/private` and OpenVPN configuration file in `<ca_root>/profiles`. Ensure that OpenVPN configuration is kept secret because after installed enables the workstation to connect to the VPN without any other user input. The file should be installed in a directory accessible only to administrators, for example: `C:\Program Files\OpenVPN Connect\profiles`. You can secure the folder with the following commands:
+The certificate file is located in `<ca_root>/certs` directory, the private key in `<ca_root>/private` and OpenVPN configuration file is dynamically generated and printed to the screen using the `show-client.sh` script. Ensure that OpenVPN configuration is kept secret because it enables the workstation to connect to the VPN without any other user input. The file should be installed in a directory accessible only to administrators, for example: `C:\Program Files\OpenVPN Connect\profiles` or `C:\Program Files\OpenVPN\config`. You can secure the folder with the following commands:
 
 ```
 mkdir "C:\Program Files\OpenVPN Connect\profiles"
@@ -111,3 +120,83 @@ Usage:
 ### Print the certificate revocation list
 
 Use `show-crl.sh` script to display the current certificate revocation list. The script takes no arguments.
+
+## OpenVPN Access Server Setup
+
+Install the `openvpn` package:
+
+```shell
+apt -y install openvpn
+```
+
+Install optional authentication modules, if you intend to use addition user authentication besides the client certificates.
+
+```shell
+apt -y install openvpn-auth-ldap
+apt -y install openvpn-auth-radius
+```
+
+Create OpenVPN server configuration files in `/etc/openvpn/server` directory (Ubuntu 20.04 LTS).
+
+Common configuration for all the running daemons on the same server - `common.inc`:
+
+```ini
+# Basic configuration
+dev tun
+topology subnet
+
+mode server
+tls-server
+push "topology subnet"
+client-config-dir client-config
+
+auth SHA256
+cipher AES-256-CBC
+
+# Authentication and encryption
+;capath .
+ca ca.crt
+crl-verify crl.pem
+cert server.crt
+key server.key
+dh dh.pem
+tls-auth ta.key 0
+
+# Routes
+push "route 192.168.4.0 255.255.255.0"
+
+# Other
+keepalive 10 120
+persist-key
+persist-tun
+explicit-exit-notify
+
+user nobody
+group nogroup
+
+verb 3
+```
+
+At least one instance configuration file. Use the following template for naming convention:
+
+`<protocol>-<port>.conf`
+
+An example:
+
+`udp-1194.conf`
+
+for a daemon running on port 1194 and using UDP protocol.
+
+```ini
+config common.inc
+
+local 192.168.10.30
+port 1194
+proto udp
+
+ifconfig 192.168.233.1 255.255.255.0
+push "route-gateway 192.168.233.1"
+ifconfig-pool 192.168.233.100 192.168.233.199
+
+log /var/log/openvpn/udp-1194.log
+```
