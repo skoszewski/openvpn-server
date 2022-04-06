@@ -213,7 +213,6 @@ Configura OpenVPN service for the defined daemon(s).
 
 ```shell
 sudo systemctl enable --now openvpn-server@udp-1194
-sudo systemctl start openvpn-server@udp-1194
 sudo systemctl status openvpn-server@udp-1194
 ```
 
