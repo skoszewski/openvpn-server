@@ -8,6 +8,16 @@ usage() {
     echo "Usage: $0 [ -s <server_fqdn> ] [ -r ] [ -c ]"
 }
 
+make_dh() {
+    openssl dhparam -out "$CA_ROOT/dh.pem" 2048
+    sudo cp -uv "$CA_ROOT/dh.pem" "$OPENVPN_BASEDIR/dh.pem"
+}
+
+make_ta_key() {
+    openvpn --genkey --secret "$CA_ROOT/ta.key"
+    sudo cp -uv "$CA_ROOT/ta.key" "$OPENVPN_BASEDIR/ta.key"
+}
+
 unset ROOT_CA COPY_ONLY
 
 while getopts "rs:ch" option
@@ -92,9 +102,13 @@ then
         read -p "The Diffie-Helman parameter file already exists, would you like to recreate it? " ans
         if echo $ans | grep -q '^[Yy]'
         then
-            openssl dhparam -out "$CA_ROOT/dh.pem" 2048
-            sudo cp -uv "$CA_ROOT/dh.pem" "$OPENVPN_BASEDIR/dh.pem"
+            make_dh
+        else
+            # Copy already existing DH to CA_ROOT
+            sudo cat "$OPENVPN_BASEDIR/dh.pem" > "$CA_ROOT/dh.pem"
         fi
+    else
+        make_dh
     fi
 
     # Generate static TLS key
@@ -103,9 +117,13 @@ then
         read -p "The OpenVPN static TLS key already exists, would you like to recreate it? " ans
         if echo $ans | grep -q '^[Yy]'
         then
-            openvpn --genkey --secret "$CA_ROOT/ta.key"
-            sudo cp -uv "$CA_ROOT/ta.key" "$OPENVPN_BASEDIR/ta.key"
+            make_ta_key
+        else
+            # Copy already existing TLS key to CA_ROOT
+            sudo cat "$OPENVPN_BASEDIR/ta.key" > "$CA_ROOT/ta.key"
         fi
+    else
+        make_ta_key
     fi
 
     # Copy server certificate and key
