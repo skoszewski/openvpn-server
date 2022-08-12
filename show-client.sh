@@ -84,8 +84,11 @@ then
     exit 1
 fi
 
-if [ ! -z "$CLIENT_NAME" ]
+if [ -z "$CLIENT_NAME" ]
 then
+    # Look for the client name in the certificate
+    CLIENT_NAME=$(openssl x509 -noout -subject -in "$CA_ROOT/certs/$BASE_NAME.crt" -nameopt multiline | awk '/^[[:space:]]*description/ { print $3 }')
+else
     # Verify that the client name does not contain illegal characters.
     if echo $CLIENT_NAME | grep -q -v -P '^[a-zA-Z][a-zA-Z0-9 ()#_-]*[a-zA-Z0-9)]+$'
     then
