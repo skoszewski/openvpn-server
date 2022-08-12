@@ -87,6 +87,11 @@ fi
 # Define Subject Common Name
 SUBJECT_NAME="/CN=$BASE_NAME/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C/description=$CLIENT_NAME/serialNumber=$SERIAL_NUMBER"
 
+if [ -n "$SERIAL_NUMBER" ]
+then
+    SUBJECT_NAME="$SUBJECT_NAME/serialNumber=$SERIAL_NUMBER"
+fi
+
 # Create a certificate request
 if ! openssl req -verbose -out "$REQ_FILE" -newkey rsa:2048 -nodes -keyout "$KEY_FILE" -config ca.conf -subj "$SUBJECT_NAME" -addext "subjectAltName=DNS:$BASE_NAME"
 then
