@@ -138,9 +138,21 @@ apt -y install openvpn-auth-ldap
 apt -y install openvpn-auth-radius
 ```
 
+Uncomment the following line in the `/etc/sysctl.conf` file:
+
+```
+net.ipv4.ip_forward=1
+```
+
+Load changed values:
+
+```shell
+sudo sysctl -p /etc/sysctl.conf
+```
+
 Create OpenVPN server configuration files in `/etc/openvpn/server` directory (Ubuntu 20.04 LTS).
 
-Common configuration for all the running daemons on the same server - `common.inc`:
+Common configuration file for all the running daemons on the same server - `common.inc`:
 
 ```ini
 # Basic configuration
@@ -164,8 +176,8 @@ key server.key
 dh dh.pem
 tls-auth ta.key 0
 
-# Routes
-push "route 192.168.4.0 255.255.255.0"
+# Push local network route(s) to clients
+push "route 10.0.0.0 255.255.255.0"
 
 # Other
 keepalive 10 120
@@ -203,15 +215,7 @@ ifconfig-pool 192.168.233.100 192.168.233.199
 log /var/log/openvpn/udp-1194.log
 ```
 
-Uncomment the following line in the `/etc/sysctl.conf` file:
-
-```
-net.ipv4.ip_forward=1
-```
-
-Initialize the CA and issue a server certificate. All deamons will use the same certificate.
-
-Configura OpenVPN service for the defined daemon(s).
+Configure OpenVPN services for the defined daemon(s).
 
 ```shell
 sudo systemctl enable --now openvpn-server@udp-1194
