@@ -26,7 +26,7 @@ The scripts are:
 
 ### Initialization
 
-Review the `ca.env` file and make necessary changes. At least customize `SUBJ_*` and `SERVER_*` variables.
+copy `template.env` to `ca.env`, review it, and make necessary changes. Customize `CA_NAME`, `CA_LONGNAME`, `SUBJ_*` and `SERVER_*` variables.
 
 ```conf
 # Basic variables 
@@ -40,7 +40,7 @@ export SUBJ_C="PL"
 
 # CRL and AIA server information
 export SERVER_NAME="openvpn-poc"
-export SERVER_FQDN="$SERVER_NAME.example.com"
+export SERVER_DOMAIN="example.com"
 export SERVER_WWW_PROTOCOL="https"
 
 # OpenVPN server information
@@ -51,6 +51,7 @@ export SERVER_PORT="1194"
 # DO NOT MODIFY THE LINES BELOW UNLESS YOU KNOW WHAT YOU ARE DOING
 export CA_ROOT="$(pwd)/$CA_NAME"
 export CA_SECT="openvpn_ca"
+export SERVER_FQDN="${SERVER_NAME}.${SERVER_DOMAIN}"
 ```
 
 Run the `make-ca.sh` script to create a directory structure which will hold CA database. The CA root and the server certificate will be created.
