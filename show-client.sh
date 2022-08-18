@@ -38,7 +38,7 @@ then # Client name is not specified, BASE_NAME is defined.
     test -f "$CA_ROOT/certs/$BASE_NAME.crt" || exit_with_message "Certificate \"$BASE_NAME.crt\" does not exist."
 
     # Look for the client name in the certificate
-    CLIENT_NAME=$(openssl x509 -noout -subject -in "$CA_ROOT/certs/$BASE_NAME.crt" -nameopt multiline | awk '/^[[:space:]]*description/ { print $3 }')
+    CLIENT_NAME="$(openssl x509 -noout -subject -in "$CA_ROOT/certs/$BASE_NAME.crt" -nameopt multiline | grep -E '^[[:space:]]*description' | sed 's/^.*= *//')"
 else # Client name is specified, BASE_NAME must be calculated.
     # Verify that the client name does not contain illegal characters.
     if echo $CLIENT_NAME | grep -q -v -P '^[a-zA-Z][a-zA-Z0-9 ()#_-]*[a-zA-Z0-9)]+$'
