@@ -3,7 +3,7 @@
 . functions.sh
 
 usage() {
-    echo "Usage: $0 { -n <client_name> | -b <base_name> } [ -c ]"
+    echo "Usage: $0 { -n <client_name> | -b <base_name> }"
 }
 
 while getopts "cn:b:h" option
@@ -14,9 +14,6 @@ do
             ;;
         n)
             CLIENT_NAME="$OPTARG"
-            ;;
-        c)
-            MODE="certificate"
             ;;
         h)
             usage
@@ -54,11 +51,4 @@ fi
 # Check, if the environment has been sourced. Stop, if not.
 check_env || exit 1
 
-case $MODE in
-    certificate)
-        show_certificate
-        ;;
-    *)
-        show_profile
-        ;;
-esac
+show_profile
