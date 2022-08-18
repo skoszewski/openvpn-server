@@ -20,6 +20,15 @@ check_env() {
     return 0 # TRUE
 }
 
+# Check, if we are running as root
+check_if_root() {
+    if [ $(id -u) -ne "0" ]
+    then
+        echo "Run the script as root."
+        exit 1
+    fi
+}
+
 # Print an error message and exit
 exit_with_message() {
     echo "ERROR: $1"
