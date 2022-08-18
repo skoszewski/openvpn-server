@@ -129,13 +129,13 @@ revoke_cert() {
 # Show OpenVPN profile (output to STDOUT)
 show_profile() {
     # Check, if the BASE_NAME variable is not empty.
-    test -n "$BASE_NAME" || echo "ERROR: \$BASE_NAME is not set."; return 1
+    test -n "$BASE_NAME" || { echo "ERROR: \$BASE_NAME is not set."; return 1; }
 
     # Check, if the required files are present.
-    test -f "$CA_ROOT/$CA_NAME.crt" || echo "ERROR: Root CA certificate is missing."; return 1
-    test -f "$CA_ROOT/certs/$BASE_NAME.crt" || echo "ERROR: Certificate \"$BASE_NAME.crt\" is missing."; return 1
-    test -f "$CA_ROOT/private/$BASE_NAME-key.txt" || echo "ERROR: Private key \"$BASE_NAME-key.txt\" is missing."; return 1
-    test -f "$CA_ROOT/ta.key" || echo "ERROR: TLS key is missing."; return 1
+    test -f "$CA_ROOT/$CA_NAME.crt" || { echo "ERROR: Root CA certificate is missing."; return 1; }
+    test -f "$CA_ROOT/certs/$BASE_NAME.crt" || { echo "ERROR: Certificate \"$BASE_NAME.crt\" is missing."; return 1; }
+    test -f "$CA_ROOT/private/$BASE_NAME-key.txt" || { echo "ERROR: Private key \"$BASE_NAME-key.txt\" is missing."; return 1; }
+    test -f "$CA_ROOT/ta.key" || { echo "ERROR: TLS key is missing."; return 1; }
 
     # Compose and create or recreate the OpenVPN config file
     cat <<EOF
@@ -177,8 +177,8 @@ EOF
 
 # Show client certificate
 show_certificate() {
-    test -n "$BASE_NAME" || echo "ERROR: \$BASE_NAME not defined."; return 1
-    
+    test -n "$BASE_NAME" || { echo "ERROR: \$BASE_NAME not defined."; return 1; }
+
     local CERT_FILE="$CA_ROOT/certs/$BASE_NAME.crt"
     
     if [ -f "$CERT_FILE" ]
