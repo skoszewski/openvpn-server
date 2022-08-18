@@ -4,6 +4,12 @@
 
 # Define functions
 show_profile() {
+    # Check, if the required files are present.
+    test -f "$CA_ROOT/$CA_NAME.crt" || exit_with_message "Root CA certificate is missing."
+    test -f "$CA_ROOT/certs/$BASE_NAME.crt" || exit_with_message "Certificate \"$BASE_NAME.crt\" is missing."
+    test -f "$CA_ROOT/private/$BASE_NAME-key.txt" || exit_with_message "Private key \"$BASE_NAME-key.txt\" is missing."
+    test -f "$CA_ROOT/ta.key" || exit_with_message "TLS key is missing."
+
     # Compose and create or recreate the OpenVPN config file
     cat <<EOF
 # Client Name: "$CLIENT_NAME"
@@ -35,7 +41,7 @@ $(openssl rsa -in "$CA_ROOT/private/$BASE_NAME-key.txt" 2>&-)
 </key>
 
 <tls-auth>
-$(cat $CA_ROOT/ta.key)
+$(cat "$CA_ROOT/ta.key")
 </tls-auth>
 
 key-direction 1
@@ -85,10 +91,13 @@ then
 fi
 
 if [ -z "$CLIENT_NAME" ]
-then
+then # Client name is not specified, BASE_NAME is defined.
+    # Check, if the certificate is present.
+    test -f "$CA_ROOT/certs/$BASE_NAME.crt" || exit_with_message "Certificate \"$BASE_NAME.crt\" does not exist."
+
     # Look for the client name in the certificate
     CLIENT_NAME=$(openssl x509 -noout -subject -in "$CA_ROOT/certs/$BASE_NAME.crt" -nameopt multiline | awk '/^[[:space:]]*description/ { print $3 }')
-else
+else # Client name is specified, BASE_NAME must be calculated.
     # Verify that the client name does not contain illegal characters.
     if echo $CLIENT_NAME | grep -q -v -P '^[a-zA-Z][a-zA-Z0-9 ()#_-]*[a-zA-Z0-9)]+$'
     then
@@ -96,10 +105,9 @@ else
         echo "       dashes, underscores, a hash symbol (#) and parentheses."
         exit 1
     fi
-fi
 
-# Calculate basename, if not defined.
-test -z "$BASE_NAME" && BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
+    BASE_NAME=$(echo "$CLIENT_NAME" | tr 'A-Z -' 'a-z__' | tr -d -c 'a-z0-9_')
+fi
 
 # Check, if the environment has been sourced. Stop, if not.
 check_env || exit 1
