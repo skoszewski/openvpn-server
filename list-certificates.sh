@@ -50,7 +50,8 @@ cat $CA_ROOT/index.txt | grep -i '^v' | cut -d/ -f2- | while read line
                 then
                     echo "[$BASE_NAME]"
                 else
-                    echo "$CLIENT_NAME [$BASE_NAME]"
+                    # Output the client name and base name (the server certificate will have dots in CN)
+                    echo "$CLIENT_NAME [${BASE_NAME//./_}]"
                 fi
             done
     done
