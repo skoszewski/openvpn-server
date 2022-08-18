@@ -4,11 +4,14 @@
 
 # Define functions
 show_profile() {
+    # Check, if the BASE_NAME variable is not empty.
+    test -n "$BASE_NAME" || echo "ERROR: \$BASE_NAME is not set."; return 1
+
     # Check, if the required files are present.
-    test -f "$CA_ROOT/$CA_NAME.crt" || exit_with_message "Root CA certificate is missing."
-    test -f "$CA_ROOT/certs/$BASE_NAME.crt" || exit_with_message "Certificate \"$BASE_NAME.crt\" is missing."
-    test -f "$CA_ROOT/private/$BASE_NAME-key.txt" || exit_with_message "Private key \"$BASE_NAME-key.txt\" is missing."
-    test -f "$CA_ROOT/ta.key" || exit_with_message "TLS key is missing."
+    test -f "$CA_ROOT/$CA_NAME.crt" || echo "ERROR: Root CA certificate is missing."; return 1
+    test -f "$CA_ROOT/certs/$BASE_NAME.crt" || echo "ERROR: Certificate \"$BASE_NAME.crt\" is missing."; return 1
+    test -f "$CA_ROOT/private/$BASE_NAME-key.txt" || echo "ERROR: Private key \"$BASE_NAME-key.txt\" is missing."; return 1
+    test -f "$CA_ROOT/ta.key" || echo "ERROR: TLS key is missing."; return 1
 
     # Compose and create or recreate the OpenVPN config file
     cat <<EOF
@@ -56,7 +59,7 @@ show_certificate() {
         openssl x509 -noout -text -nameopt multiline -certopt no_pubkey,no_sigdump -in "$CERT_FILE"
     else
         echo "The certificate for the specified client does not exist."
-        exit 1
+        return 1
     fi
 }
 
