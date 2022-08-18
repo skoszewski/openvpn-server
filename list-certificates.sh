@@ -4,14 +4,22 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 [ -f <client_filter> ] "
+    echo "Usage: $0 [ -f <client_filter> ] [ -c ]"
     echo ""
     echo "       NOTICE: The <client_filter> is an extended regular expression."
 }
 
-while getopts "hf:" option
+# An excellent description of console escape sequences may be found 
+# in the following answer: https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
+unset START_HIGHLIGHT RESET_CONSOLE
+
+while getopts "chf:" option
 do
     case $option in
+        c)
+            START_HIGHLIGHT="\033[33;1m"
+            RESET_CONSOLE="\033[0m"
+            ;;
         f)
             CLIENT_FILTER="$OPTARG"
             ;;
@@ -51,7 +59,7 @@ cat $CA_ROOT/index.txt | grep -i '^v' | cut -d/ -f2- | while read line
                     echo "[$BASE_NAME]"
                 else
                     # Output the client name and base name (the server certificate will have dots in CN)
-                    echo "$CLIENT_NAME [${BASE_NAME//./_}]"
+                    echo -e "$CLIENT_NAME [${START_HIGHLIGHT}${BASE_NAME//./_}${RESET_CONSOLE}]"
                 fi
             done
     done
