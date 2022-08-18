@@ -20,6 +20,12 @@ check_env() {
     return 0 # TRUE
 }
 
+# Print an error message and exit
+exit_with_message() {
+    echo "ERROR: $1"
+    exit 1
+}
+
 # Unset key variables
 unset_env() {
     for v in CA_NAME CA_LONGNAME CA_ROOT CA_SECT SUBJ_O SUBJ_OU SUBJ_C SERVER_NAME SERVER_FQDN SERVER_WWW_PROTOCOL
