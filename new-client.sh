@@ -111,6 +111,6 @@ rm -f "$REQ_FILE"
 
 echo -e "\nThe certificate has been issued."
 echo -e "You can print an OpenVPN profile using following the command:\n"
-echo -e "./show-client.sh -n \"$CLIENT_NAME\"\n"
+echo -e "./show-profile.sh -n \"$CLIENT_NAME\"\n"
 echo -e "or\n"
-echo -e "./show-client.sh -b \"$BASE_NAME\"\n"
+echo -e "./show-profile.sh -b \"$BASE_NAME\"\n"
