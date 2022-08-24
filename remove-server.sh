@@ -54,15 +54,18 @@ then
 
     # Revoke the certificate and generate a new CRL
     openssl ca -config ca.conf -name "$CA_SECT" -revoke "$CERT_FILE" -crl_reason cessationOfOperation
-    gen_crl
-    echo -e "\nNOTICE: Certificate revoked. Remember to publish the new CRL immediately !"
+
+    # Generate the new CRL
+    gen_crl || exit 1
+
+    echo -e "\nNOTICE: Certificate has been revoked. Remember to publish the new CRL immediately !"
 
     # Remove client certificate, key and OpenVPN configuration profile
     rm -f "$CERT_FILE"
 
     # Remove the key if exists
-    if check_key $KEY_FILE
-    then
-        rm -f "$KEY_FILE"
-    fi
+    check_key $KEY_FILE && rm -f $KEY_FILE
+else
+    echo "The certificate for the specified server does not exist."
+    exit 1
 fi

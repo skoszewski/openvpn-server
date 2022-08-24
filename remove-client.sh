@@ -49,44 +49,36 @@ check_env -v || exit 1
 
 # Define additional variables
 CERT_FILE="$CA_ROOT/certs/$BASE_NAME.crt"
+KEY_FILE="$CA_ROOT/private/$BASE_NAME-key.txt"
 
-if [ -f "$CERT_FILE" ]
+if check_cert "$CERT_FILE"
 then
     echo -e "Found the client with the $(openssl x509 -nameopt multiline -certopt no_pubkey,no_sigdump -noout -text -in $CERT_FILE)\n"
 
     # Confirm the intent of removing the client
     read -p "Are you sure you want to remove the client ($BASE_NAME)? " ans
 
-    if echo $ans | grep -q '^[yY]'
+    if echo $ans | grep -q -v '^[yY]'
     then
-        # Revoke the certificate
-        openssl ca -config ca.conf -name "$CA_SECT" -revoke "$CERT_FILE" -crl_reason cessationOfOperation
-
-        # Remove client certificate, key and OpenVPN configuration profile
-        rm -f "$CERT_FILE"
-        
-        # Generate a new CRL
-        if gen_crl
-        then
-            # Copy CRL file to the OpenVPN server configuration directory
-            if [ -d $OPENVPN_BASEDIR ]
-            then
-                sudo cp "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_BASEDIR/crl.pem"
-            fi
-        else
-            echo "ERROR: Cannot generate a new CRL."
-        fi
-    else
+        echo -e "\nNOTICE: The certificate for the client ($BASE_NAME) will NOT BE revoked."
         exit 0
     fi
+
+    # Revoke the certificate
+    openssl ca -config ca.conf -name "$CA_SECT" -revoke "$CERT_FILE" -crl_reason cessationOfOperation
+    
+    # Generate a new CRL
+    gen_crl || exit 1
+
+    echo -e "\nNOTICE: Certificate has been revoked. Remember to publish the new CRL immediately !"
+
+    # Remove client certificate, key and OpenVPN configuration profile
+    rm -f "$CERT_FILE"
+
+    # Remove the key if exists
+    check_key $KEY_FILE && rm -f $KEY_FILE
 else
-    echo "The profile for the specified client does not exist."
+    echo "The certificate for the specified client does not exist."
     exit 1
 fi
 
-KEY_FILE="$CA_ROOT/private/$BASE_NAME-key.txt"
-OVPN_FILE="$CA_ROOT/profiles/$BASE_NAME.ovpn"
-
-# Remove client private key and OpenVPN configuration profile
-test -f $KEY_FILE && rm -f $KEY_FILE
-test -f $OVPN_FILE && rm -f $OVPN_FILE
