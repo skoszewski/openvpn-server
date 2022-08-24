@@ -89,7 +89,17 @@ gen_crl() {
     check_env || return 1
 
     # Generate, a new CRL.
-    openssl ca -config ca.conf -name "$CA_SECT" -gencrl -out "$CA_ROOT/$CA_NAME.crl"
+    if openssl ca -config ca.conf -name "$CA_SECT" -gencrl -out "$CA_ROOT/$CA_NAME.crl"
+    then
+        # Copy CRL file to the OpenVPN server configuration directory
+        if [ -d "$OPENVPN_BASEDIR" ]
+        then
+            sudo cp "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_BASEDIR/crl.pem"
+        fi
+    else
+        echo "ERROR: Cannot generate a new CRL."
+        return 1
+    fi
 }
 
 # Check, if the CA certificate is signed by another CA
