@@ -17,12 +17,14 @@ The scripts are:
 * `*.env` - shell environment initialization files.
 * `make-ca.sh` - make CA and issue a server certificate.
 * `new-client.sh` - register a new client and issue a certificate.
-* `list-clients.sh` - list currently active clients with an optional name filter.
-* `show-client.sh` - print the client OpenVPN profile or the certificate to the screen.
-* `remove-client.sh` - remove the client information, revoke its certificate and generate a new CRL.
-* `show-crl.sh` - print the textual representation of the CRL
 * `new-server.sh` - register a new server and issue a certificate.
-* `remove-server.sh` - remove the server information, revoke its certificate and generate a new CRL.
+* `list-certificates.sh` - list certificates issued to clients and servers with an optional name filter.
+* `show-certificate.sh` - print the certificate to the screen.
+* `show-profile.sh` - print the OpenVPN client profile to the screen or save it to a file.
+* `remove-client.sh` - revoke clients' certificate, remove files and generate a new CRL.
+* `remove-server.sh` - revoke servers' certificate, remove files and generate a new CRL.
+* `show-crl.sh` - print the textual representation of the CRL.
+* `subnets.py` - calculate subnets of available address space.
 
 ### Initialization
 
@@ -54,9 +56,9 @@ export CA_SECT="openvpn_ca"
 export SERVER_FQDN="${SERVER_NAME}.${SERVER_DOMAIN}"
 ```
 
-Run the `make-ca.sh` script to create a directory structure which will hold CA database. The CA root and the server certificate will be created.
+Run the `make-ca.sh` script to create a directory structure which will hold CA database. The CA root certificate will be created. Run `new-server.sh` script without parameters to create server configuration and issue the server certificate.
 
-### Create a new client
+### Creating a new client
 
 Use the `new-client.sh` script to create a new client profile. The script takes one required and two optional arguments.
 
@@ -70,9 +72,11 @@ Usage:
 * `base_name` - an optional base name for certificate and OpenVPN profile files. You can only use lower case letters, numbers and an underscore. The name must start with a letter. The base name will be automatically generated from the client name if a `base_name` is not specified.
 * `device_serial_number` - the device's serial number.
 
-The certificate file is located in `<ca_root>/certs` directory, the private key in `<ca_root>/private` and OpenVPN configuration file is dynamically generated and printed to the screen using the `show-client.sh` script. Ensure that OpenVPN configuration is kept secret because it enables the workstation to connect to the VPN without any other user input. The file should be installed in a directory accessible only to administrators, for example: `C:\Program Files\OpenVPN Connect\profiles` or `C:\Program Files\OpenVPN\config`. You can secure the folder with the following commands:
+The certificate file will be placed in `<ca_root>/certs` directory, and the private key in `<ca_root>/private`. OpenVPN configuration file is dynamically generated and printed to the screen using the `show-profile.sh` script. The script can also save the profile to the file and optionally calculate download URL, if a publishing directory is configured. Use `-f !` parameter to generate file name based on certificate cryptographics checksum, or `-f -` to generate a random profile name.
 
-```
+Ensure that OpenVPN configuration is kept secret because it enables the workstation to connect to the VPN without any other user input. The file should be installed in a directory accessible only to administrators, for example: `C:\Program Files\OpenVPN Connect\profiles` or `C:\Program Files\OpenVPN\config`. You can secure the folder with the following commands:
+
+```batch
 mkdir "C:\Program Files\OpenVPN Connect\profiles"
 icacls "C:\Program Files\OpenVPN Connect\profiles" /grant *S-1-5-19:f
 icacls "C:\Program Files\OpenVPN Connect\profiles" /grant *S-1-5-32-544:f
@@ -94,21 +98,25 @@ C:\Program Files\OpenVPN Connect\profiles NT AUTHORITY\SYSTEM:(F)
 Successfully processed 1 files; Failed processing 0 files
 ```
 
-### List clients
+### Browsing client and server database
 
-The script `list-clients.sh` prints all active clients. An optional `-f` parameter takes one argument - an extended regular expression which will be used to filter clients.
+The script `list-certificates.sh` prints all active issued certificates. An optional `-f` parameter takes one argument - an extended regular expression which will be used to filter certificates.
 
-### Show client information
+Use `show-certificate.sh` script to print information and the issued certificate.
 
-The script `show-client.sh` prints the client's OpenVPN profile to the screen.
+Use `show-profile.sh` to print client profile to the screen.
 
 Usage:
 
 ```text
-./show-client.sh { -n <client_name> | -b <base_name> } [ -c ]
+Usage: ./show-profile.sh { -n <client_name> | -b <base_name> } [ -d <dirname> ] [ -f <filename> | -f - | -f ! ] [ -u <URL path> ]
 ```
 
-The `client_name` or `base_name` must be specified. An optional parameter `-c` istructs the script to print the certificate information instead of the OpenVPN profile.
+The `client_name` or `base_name` must be specified.
+
+An optional `-d <dirname>` parameter istructs the script to save the profile to a file. The parameter takes a destination directory path. The file name is `<base_name>.ovpn` by default. Use `-f` to specify your own name or a special one. `!` used with `-f` will create a certificate hash derived name and `-` a random one.
+
+If you have configured the web server and a directory to publish profiles, you can use `-u` parameter to calculate an URL where the profile can be downloaded. The `-u` take an argument - an URL path that will be added to server's FQDN before appending the profile name.
 
 ### Permanently disabling clients
 
@@ -138,6 +146,8 @@ Install optional authentication modules, if you intend to use addition user auth
 apt -y install openvpn-auth-ldap
 apt -y install openvpn-auth-radius
 ```
+
+> NOTE: The configuration of the OpenVPN user authentication is currently beyond the scope of that document.
 
 Uncomment the following line in the `/etc/sysctl.conf` file:
 
@@ -200,12 +210,12 @@ An example:
 
 `udp-1194.conf`
 
-for a daemon running on port `1194` and using UDP protocol. The following example configures a daemon running on a host with the IP `192.168.10.30` (WAN-side). The local network is `192.168.4.0/24` and the VPN pool has been assigned from the `192.168.233.0/24` network. The VPN dynamic IP pool range has been reduced to `192.168.233.100 - 192.168.233.199`.
+for a daemon running on port `1194` and using UDP protocol. The following example configures a daemon running on a host with the IP `1.2.3.4` (WAN-side). The local network is `192.168.4.0/24` and the VPN pool has been assigned from the `192.168.233.0/24` network. The VPN dynamic IP pool range has been reduced to `192.168.233.100 - 192.168.233.199`.
 
 ```ini
 config common.inc
 
-local 192.168.10.30
+local 1.2.3.4
 port 1194
 proto udp
 
@@ -223,4 +233,4 @@ sudo systemctl enable --now openvpn-server@udp-1194
 sudo systemctl status openvpn-server@udp-1194
 ```
 
-You should have the OpenVPN daemons up and running.
+You should have the OpenVPN daemon up and running.
