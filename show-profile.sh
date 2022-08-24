@@ -3,7 +3,7 @@
 . functions.sh
 
 usage() {
-    echo "Usage: $0 { -n <client_name> | -b <base_name> } [ -d <dirname> ] [ -f <filename> | -f - | -f + ]"
+    echo "Usage: $0 { -n <client_name> | -b <base_name> } [ -d <dirname> ] [ -f <filename> | -f - | -f ! ] [ -u <URL path> ]"
 }
 
 check_cert() {
@@ -16,7 +16,7 @@ check_env || exit 1
 # Clear decision environment variables.
 unset SAVE_PROFILE OUTPUT_DIR OUTPUT_FILE
 
-while getopts "cn:b:hd:f:" option
+while getopts "cn:b:hd:f:p:" option
 do
     case $option in
         b)
@@ -36,6 +36,18 @@ do
             ;;
         f)
             OUTPUT_FILE="$OPTARG"
+            ;;
+        u)
+            if [ -n "$OPTARG" ]
+            then
+                URL_PATH=$(echo $OPTARG | sed 's|^/*||' | sed 's|/*$||')
+                if [ -n "$URL_PATH" ]
+                then
+                    URL_PREFIX="${SERVER_FQDN}/$URL_PATH"
+                else
+                    URL_PREFIX=$SERVER_FQDN
+                fi
+            fi
             ;;
         h)
             usage
@@ -78,10 +90,12 @@ then
     show_profile
 else
     test -z "$OUTPUT_FILE" && OUTPUT_FILE="$BASE_NAME.ovpn"
-    test "$OUTPUT_FILE" = "!" && OUTPUT_FILE="$(openssl rand -hex 12).ovpn"
-    test "$OUTPUT_FILE" = "-" && OUTPUT_FILE="$(cat "$CA_ROOT/certs/$BASE_NAME.crt" | sha256sum | head -c 24).ovpn"
+    test "$OUTPUT_FILE" = "!" && OUTPUT_FILE="$(cat "$CA_ROOT/certs/$BASE_NAME.crt" | sha256sum | head -c 24).ovpn"
+    test "$OUTPUT_FILE" = "-" && OUTPUT_FILE="$(openssl rand -hex 12).ovpn"
+    test -n "$URL_PREFIX" && DOWNLOAD_URL="$URL_PREFIX/$OUTPUT_FILE"
     test -n "$OUTPUT_DIR" && OUTPUT_FILE="$OUTPUT_DIR/$OUTPUT_FILE"
     
     echo "Saving the profile to \"$OUTPUT_FILE\"."
+    test -n "$DOWNLOAD_URL" && echo "The profile will be available at: https://$DOWNLOAD_URL"
     show_profile > "$OUTPUT_FILE"
 fi
