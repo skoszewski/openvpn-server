@@ -16,7 +16,7 @@ check_env || exit 1
 # Clear decision environment variables.
 unset SAVE_PROFILE OUTPUT_DIR OUTPUT_FILE
 
-while getopts "cn:b:hd:f:p:" option
+while getopts "cn:b:hd:f:u:" option
 do
     case $option in
         b)
