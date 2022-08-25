@@ -3,7 +3,9 @@
 . functions.sh
 
 usage() {
-    echo "Usage: $0 { -n <client_name> | -b <base_name> } [ -d <dirname> ] [ -f <filename> | -f - | -f ! ] [ -u <URL path> ]"
+    echo "Usage: $0 { -n <client_name> | -b <base_name> } [ -d <dirname> ]"
+    echo "          [ -f <filename> | -f - | -f ! ] [ -u <URL path> ]"
+    echo "          [ -p tcp|udp ] [ -P <n> ]"
 }
 
 check_cert() {
@@ -16,7 +18,7 @@ check_env || exit 1
 # Clear decision environment variables.
 unset SAVE_PROFILE OUTPUT_DIR OUTPUT_FILE
 
-while getopts "cn:b:hd:f:u:" option
+while getopts "cn:b:hd:f:u:p:P:" option
 do
     case $option in
         b)
@@ -48,6 +50,34 @@ do
                     URL_PREFIX=$SERVER_FQDN
                 fi
             fi
+            ;;
+        # Override the server PORT and PROTOCOL setting in the profiles
+        p)
+            case "$OPTARG" in
+                tcp)
+                    SERVER_PROTOCOL="tcp"
+                    ;;
+                udp)
+                    SERVER_PROTOCOL="udp"
+                    ;;
+                *)
+                    echo "ERROR: The protocol must be tcp or udp."
+                    exit 1
+                    ;;
+            esac
+            ;;
+        P)
+            if echo "$OPTARG" | grep -E -q -v '^[[:digit:]]{1,5}$'
+            then
+                echo "ERROR: The argument to -P must be numeric."
+                exit 1
+            fi
+            if [ $OPTARG -lt 1 ] || [ $OPTARG -gt 65534 ]
+            then
+                echo "ERROR: The argument to -P must be a number from 1-65534 range."
+                exit 1
+            fi
+            SERVER_PORT="$OPTARG"
             ;;
         h)
             usage
