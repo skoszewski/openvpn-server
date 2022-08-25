@@ -194,7 +194,6 @@ push "route 10.0.0.0 255.255.255.0"
 keepalive 10 120
 persist-key
 persist-tun
-explicit-exit-notify
 
 user nobody
 group nogroup
@@ -218,6 +217,7 @@ config common.inc
 local 1.2.3.4
 port 1194
 proto udp
+explicit-exit-notify
 
 ifconfig 192.168.233.1 255.255.255.0
 push "route-gateway 192.168.233.1"
