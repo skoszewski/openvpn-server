@@ -233,4 +233,45 @@ sudo systemctl enable --now openvpn-server@udp-1194
 sudo systemctl status openvpn-server@udp-1194
 ```
 
-You should have the OpenVPN daemon up and running.
+The default OpenVPN configuration will not work if your client is on restricted networks. You can workaround most of hotel, airport and guest network restrictions by using `tcp/443` port to connect to the OpenVPN Server. Add another file `tcp-443.conf` to `/etc/openvpn/server` and use the example below:
+
+```ini
+config common.inc
+
+local 1.2.3.4
+port 443
+proto tcp-server
+port-share 127.0.0.1 443
+
+ifconfig 192.168.234.1 255.255.255.0
+push "route-gateway 192.168.234.1"
+ifconfig-pool 192.168.234.100 192.168.234.199
+
+log /var/log/openvpn/tcp-443.log
+```
+
+> NOTE: Use the `post-share` directive only if you intend to use port sharing with the web server.
+
+If you need to share the 443 port with the web server, configure it to bind to the local interface only.
+
+**NGINX**: edit the `/etc/nginx/sites-available/default` file and find the server configuration. Add loopback interface addresses to `listen` directives.
+
+```conf
+listen 127.0.0.1:443 ssl default_server;
+listen [::1]:443 ssl default_server;
+```
+
+Restart the **NGINX** web server to apply changes.
+
+```shell
+sudo systemctl restart nginx
+```
+
+Start and check the OpenVPN daemon listening on port 443.
+
+```shell
+sudo systemctl enable --now openvpn-server@tcp-443
+sudo systemctl status openvpn-server@tcp-443
+```
+
+Check for errors in web server or OpenVPN server logs.
