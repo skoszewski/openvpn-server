@@ -109,7 +109,9 @@ Use `show-profile.sh` to print client profile to the screen.
 Usage:
 
 ```text
-Usage: ./show-profile.sh { -n <client_name> | -b <base_name> } [ -d <dirname> ] [ -f <filename> | -f - | -f ! ] [ -u <URL path> ]
+Usage: $0 { -n <client_name> | -b <base_name> } [ -d <dirname> ]
+          [ -f <filename> | -f - | -f ! ] [ -u <URL path> ]
+          [ -p tcp|udp ] [ -P <n> ]
 ```
 
 The `client_name` or `base_name` must be specified.
@@ -117,6 +119,8 @@ The `client_name` or `base_name` must be specified.
 An optional `-d <dirname>` parameter istructs the script to save the profile to a file. The parameter takes a destination directory path. The file name is `<base_name>.ovpn` by default. Use `-f` to specify your own name or a special one. `!` used with `-f` will create a certificate hash derived name and `-` a random one.
 
 If you have configured the web server and a directory to publish profiles, you can use `-u` parameter to calculate an URL where the profile can be downloaded. The `-u` take an argument - an URL path that will be added to server's FQDN before appending the profile name.
+
+The `-p` and `-P` parameters allows overriding default `udp/1194` used in a profile.
 
 ### Permanently disabling clients
 
