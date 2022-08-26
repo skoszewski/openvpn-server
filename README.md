@@ -141,6 +141,16 @@ Use `show-crl.sh` script to display the current certificate revocation list. The
 
 The CA information and CRL may be published to the local web server. Define `SERVER_CA_DIRECTORY` variable in the enviroment file and point it to the server root directory. Use `publish-ca.sh` script to copy AIA and CRL files to the directory.
 
+Download the CA certificate to clients, if you want to use the web server to distribute profiles (use name hashing to provide some sort of security).
+
+On Windows use the following command to add the certificate to machine trusted root certificates store. Remember to run the command in an elevated command prompt.
+
+```batch
+certutil -addstore "Root" "<certfile.crt>"
+```
+
+> NOTE: Close and reopen the web browsers using the system store (Edge, Chrome, Opera). The Firefox is not using the system certificate store and you have to add the certificate in the Firefox.
+
 ## OpenVPN Access Server Setup
 
 Install the `openvpn` package:
