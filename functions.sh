@@ -84,6 +84,24 @@ check_ca_crl() {
     check_crl "$CA_ROOT/$CA_NAME.crl"
 }
 
+publish_crl_and_aia() {
+    check_env || return 1
+
+    local DIR=${1:-$SERVER_CA_DIRECTORY}
+
+    # Check, if webserver publishing directory has been defined ...
+    test -n "$DIR" || return 0
+
+    # ... and exists.
+    test -d "$DIR" || return 1
+
+    # Publish the CA root certificate and the CRL
+    for file in "$CA_ROOT/$CA_NAME".{crt,crl}
+    do
+        cp -u $file "$DIR/"
+    done
+}
+
 gen_crl() {
     # Generate, a new CRL
     check_env || return 1

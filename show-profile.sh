@@ -29,7 +29,13 @@ do
             ;;
         d)
             SAVE_PROFILE=1
-            OUTPUT_DIR="$(echo $OPTARG | sed 's/\/*$//')"
+            if [ "$OPTARG" = "-" ]
+            then
+                OUTPUT_DIR=$(echo $SERVER_PROFILE_DIRECTORY | sed 's/\/*$//')
+            else
+                OUTPUT_DIR=$(echo $OPTARG | sed 's/\/*$//')
+            fi
+
             if [ ! -d "$OUTPUT_DIR" ]
             then
                 echo "ERROR: Specified directory does not exist."

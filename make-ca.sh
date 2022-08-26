@@ -160,3 +160,6 @@ echo 01 > "$CA_ROOT/serial"
 
 # Generate an empty CRL
 openssl ca -gencrl -config ca.conf -name "$CA_SECT" -out "$CA_ROOT/$CA_NAME.crl"
+
+# Publish files, if a publishing location has been configured.
+publish_crl_and_aia
