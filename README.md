@@ -25,6 +25,7 @@ The scripts are:
 * `remove-server.sh` - revoke servers' certificate, remove files and generate a new CRL.
 * `show-crl.sh` - print the textual representation of the CRL.
 * `subnets.py` - calculate subnets of available address space.
+* `publish-ca.sh` - publish CA AIA and CRL information.
 
 ### Initialization
 
@@ -135,6 +136,10 @@ Usage:
 ### Print the certificate revocation list
 
 Use `show-crl.sh` script to display the current certificate revocation list. The script takes no arguments.
+
+### Publish CA information
+
+The CA information and CRL may be published to the local web server. Define `SERVER_CA_DIRECTORY` variable in the enviroment file and point it to the server root directory. Use `publish-ca.sh` script to copy AIA and CRL files to the directory.
 
 ## OpenVPN Access Server Setup
 
