@@ -9,9 +9,6 @@ usage() {
 
 unset USE_HASH_AS_NAME GEN_CRL
 
-# Set the default OpenVPN Server config directory
-OPENVPN_BASEDIR="/etc/openvpn/server"
-
 if [ "$1" = "-e" ]
 then
     check_env || exit 1
