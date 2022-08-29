@@ -139,7 +139,7 @@ Use `show-crl.sh` script to display the current certificate revocation list. The
 
 ### Publish CA information
 
-The CA information and CRL may be published to the local web server. Define `SERVER_CA_DIRECTORY` variable in the enviroment file and point it to the server root directory. Use `publish-ca.sh` script to copy AIA and CRL files to the directory.
+The CA information and CRL may be published to the local web server. Define `SERVER_CA_DIRECTORY` variable in the enviroment file and point it to the server root directory. Use `publish-ca.sh` script to copy AIA and CRL files to the directory. Use `show-ca.sh` with `-u` to print the URL of the server.
 
 Download the CA certificate to clients, if you want to use the web server to distribute profiles (use name hashing to provide some sort of security).
 

@@ -19,7 +19,10 @@ do
             openssl x509 -noout -text -nameopt multiline -certopt no_pubkey,no_sigdump -in "$CA_ROOT/$CA_NAME.crt"
             ;;
         u)
-            echo "The server is available at \"$SERVER_WWW_PROTOCOL://$SERVER_FQDN\"."
+            URL="$SERVER_WWW_PROTOCOL://$SERVER_FQDN"
+            echo -e "The server is available at \"$URL\"."
+            echo -e "CA certificate can be downloaded from: \"$URL/$CA_NAME.crt\"."
+            echo -e "Certificate revocation list is available from: \"$URL/$CA_NAME.crl\"."
             ;;
         h)
             usage
