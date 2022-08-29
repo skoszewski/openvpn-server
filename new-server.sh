@@ -5,7 +5,7 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 [ -s <server_fqdn> ] [ -r ] [ -c ]"
+    echo "Usage: $0 [ -s <server_fqdn> ] [ -r ] [ -c ] [ -n ] [ -d <certificate description> ]"
 }
 
 make_dh() {
@@ -18,9 +18,9 @@ make_ta_key() {
     sudo cp -uv "$CA_ROOT/ta.key" "$OPENVPN_BASEDIR/ta.key"
 }
 
-unset ROOT_CA COPY_ONLY
+unset ROOT_CA COPY_ONLY SUBJ_DESC CERT_ONLY
 
-while getopts "rs:ch" option
+while getopts "rs:chd:" option
 do
     case $option in
         r)
@@ -39,6 +39,12 @@ do
             ;;
         c)
             COPY_ONLY=1
+            ;;
+        d)
+            SUBJ_DESC="$OPTARG"
+            ;;
+        n)
+            CERT_ONLY=1
             ;;
         h)
             usage
@@ -69,7 +75,14 @@ then
     echo "NOTICE: Using the existing certificate."
 else
     # Compose a subject name
-    SUBJECT_NAME="/CN=$SERVER_FQDN/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C/description=OpenVPN Server Certificate"
+    SUBJECT_NAME="/CN=$SERVER_FQDN/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C"
+
+    # Add a description if explictly defined or the certificate will be issued
+    # for the local OpenVPN service
+    if [ -n "$SUBJ_DESC" ] || [ -z "$CERT_ONLY" ]
+    then
+        SUBJECT_NAME="/description=${SUBJ_DESC:-OpenVPN Server Certificate}"
+    fi
 
     # Create a server certificate request
     if openssl req -out "$REQ_FILE" -newkey rsa:2048 -nodes -keyout "$KEY_FILE" -config ca.conf -subj "$SUBJECT_NAME" -addext "subjectAltName=DNS:$SERVER_FQDN"
@@ -89,6 +102,8 @@ else
     fi
 
     echo "NOTICE: Issued a certificate for $SERVER_FQDN."
+    # Exit, if only X.509 certificate was requested
+    test -n "$CERT_ONLY" && exit 0
 fi
 
 # Check, if the OpenVPN has been installed, and copy files.
