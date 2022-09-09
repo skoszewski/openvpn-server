@@ -10,7 +10,7 @@ Setup a VM running **18.04 LTS** or **20.04 LTS** Ubuntu releases. Copy the scri
 
 ## CA Setup
 
-This set of scripts has been derived from the open source project available at [https://github.com/skoszewski/sk-ca-scripts](https://github.com/skoszewski/sk-ca-scripts).
+This set of scripts has been derived my other open source project: [https://github.com/skoszewski/sk-ca-scripts](https://github.com/skoszewski/sk-ca-scripts).
 
 The scripts are:
 
@@ -44,7 +44,11 @@ export SUBJ_C="PL"
 # CRL and AIA server information
 export SERVER_NAME="openvpn-poc"
 export SERVER_DOMAIN="example.com"
-export SERVER_WWW_PROTOCOL="https"
+export SERVER_WWW_PROTOCOL="http"
+
+# Uncomment the lines below, to enable publishing of CA certificates and/or profiles.
+#export SERVER_CA_DIRECTORY="/var/www/html"
+#export SERVER_PROFILE_DIRECTORY="/var/www/html/profiles"
 
 # OpenVPN server information
 export OPENVPN_BASEDIR="/etc/openvpn/server"
