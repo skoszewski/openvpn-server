@@ -38,7 +38,7 @@ export CA_LONGNAME="OpenVPN CA"
 
 # Customize the company information below.
 export SUBJ_O="Example Company Inc."
-export SUBJ_OU="Shared IT"
+export SUBJ_OU="IT"
 export SUBJ_C="PL"
 
 # CRL and AIA server information
