@@ -98,7 +98,8 @@ publish_crl_and_aia() {
     # Publish the CA root certificate and the CRL
     for file in "$CA_ROOT/$CA_NAME".{crt,crl}
     do
-        cp -u $file "$DIR/"
+        # Do a copy as root.
+        sudo cp -u $file "$DIR/"
     done
 }
 
