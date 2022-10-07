@@ -85,7 +85,7 @@ then
 fi
 
 # Define Subject Common Name
-SUBJECT_NAME="/CN=$BASE_NAME/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C/description=$CLIENT_NAME"
+build_subject_name "$BASE_NAME" "$CLIENT_NAME"
 
 if [ -n "$SERIAL_NUMBER" ]
 then
