@@ -111,7 +111,13 @@ chmod 750 "$CA_ROOT/private"
 openssl rand -writerand "$CA_ROOT/.rnd" 2>&1 1>&-
 
 # Subject name with the current Year.Month
-SUBJECT_NAME="/CN=$CA_LONGNAME $(date +%Y.%m)/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C/description=$CA_LONGNAME Certificate"
+SUBJECT_NAME="/CN=$CA_LONGNAME $(date +%Y.%m)/O=$SUBJ_O"
+
+# Add OU if defined
+test -z "$SUBJ_OU" || SUBJECT_NAME="$SUBJECT_NAME/OU=$SUBJ_OU"
+
+# Add the rest
+SUBJECT_NAME="$SUBJECT_NAME/C=$SUBJ_C/description=$CA_LONGNAME Certificate"
 
 if [ -z "$SUB_CA" ]
 then
