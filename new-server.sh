@@ -75,13 +75,14 @@ then
     echo "NOTICE: Using the existing certificate."
 else
     # Compose a subject name
-    SUBJECT_NAME="/CN=$SERVER_FQDN/O=$SUBJ_O/OU=$SUBJ_OU/C=$SUBJ_C"
-
     # Add a description if explictly defined or the certificate will be issued
     # for the local OpenVPN service
     if [ -n "$SUBJ_DESC" ] || [ -z "$CERT_ONLY" ]
     then
-        SUBJECT_NAME="/description=${SUBJ_DESC:-OpenVPN Server Certificate}"
+        build_subject_name "$SERVER_FQDN" "${SUBJ_DESC:-OpenVPN Server Certificate}"
+    else
+        # or build a subject name without a description
+        build_subject_name "$SERVER_FQDN"
     fi
 
     # Create a server certificate request

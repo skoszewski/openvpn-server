@@ -99,7 +99,7 @@ publish_crl_and_aia() {
     for file in "$CA_ROOT/$CA_NAME".{crt,crl}
     do
         # Do a copy as root.
-        sudo cp -u $file "$DIR/"
+        sudo cp -uv $file "$DIR/"
     done
 }
 
@@ -113,7 +113,7 @@ gen_crl() {
         # Copy CRL file to the OpenVPN server configuration directory
         if [ -d "$OPENVPN_BASEDIR" ]
         then
-            sudo cp "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_BASEDIR/crl.pem"
+            sudo cp -v "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_BASEDIR/crl.pem"
         fi
     else
         echo "ERROR: Cannot generate a new CRL."
@@ -217,4 +217,29 @@ show_certificate() {
         echo "The certificate for the specified client does not exist."
         return 1
     fi
+}
+
+# Build the subject name of the certificate
+build_subject_name() {
+    local CN="$1"
+    # Optional description
+    local DESC="$2"
+
+    test -n "$CN" || { echo "ERROR: Common name not defined."; return 1; }
+
+    SUBJECT_NAME="/CN=$CN/O=$SUBJ_O"
+
+    if [ -n "$SUBJ_OU" ]
+    then
+        SUBJECT_NAME="$SUBJECT_NAME/OU=$SUBJ_OU"
+    fi
+
+    SUBJECT_NAME="$SUBJECT_NAME/C=$SUBJ_C"
+
+    if [ -n "$DESC" ]
+    then
+        SUBJECT_NAME="$SUBJECT_NAME/description=$DESC"
+    fi
+
+    return 0
 }

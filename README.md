@@ -61,7 +61,11 @@ export CA_SECT="openvpn_ca"
 export SERVER_FQDN="${SERVER_NAME}.${SERVER_DOMAIN}"
 ```
 
-Run the `make-ca.sh` script to create a directory structure which will hold CA database. The CA root certificate will be created. Run `new-server.sh` script without parameters to create server configuration and issue the server certificate.
+Run the `make-ca.sh` script to create a directory structure which will hold CA database. The CA root certificate will be created.
+
+> NOTE: The current year and month number will be added to the CA subject common name.
+
+Run `new-server.sh` script without parameters to create server configuration and issue the server certificate.
 
 ### Creating a new client
 
