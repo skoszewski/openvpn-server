@@ -113,7 +113,7 @@ then
     echo "Installing or updating OpenVPN server files..."
 
     # Create a directory for client configuration files
-    mkdir "$OPENVPN_BASEDIR/client-config"
+    sudo mkdir -p "$OPENVPN_BASEDIR/client-config"
     
     # Generate DH parameter file.
     if [ -f "$OPENVPN_BASEDIR/dh.pem" ]
