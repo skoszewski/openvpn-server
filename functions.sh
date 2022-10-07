@@ -2,7 +2,7 @@
 
 # Check environment
 check_env() {
-    for v in CA_NAME CA_LONGNAME CA_ROOT CA_SECT SUBJ_O SUBJ_OU SUBJ_C SERVER_NAME SERVER_FQDN SERVER_WWW_PROTOCOL
+    for v in CA_NAME CA_LONGNAME CA_ROOT CA_SECT SUBJ_O SUBJ_C SERVER_NAME SERVER_FQDN SERVER_WWW_PROTOCOL
     do
         if test -z "${!v}"
         then
