@@ -302,3 +302,32 @@ sudo systemctl status openvpn-server@tcp-443
 ```
 
 Check for errors in web server or OpenVPN server logs.
+
+### Redirect all the traffic through the VPN
+
+Add the following command to `common.inc` file:
+
+```
+push "redirect-gateway def1"
+```
+
+Enable forwarding in the system by changing the `/etc/sysctl.conf`. Find the line with `net.ipv4.ip_forward` uncomment it if necessary and set it to `1`.
+
+Add the following lines to the top of the file `/etc/ufw/before.rules`:
+
+```
+*nat
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -s 10.0.0.0/24 -o eth0 -j MASQUERADE
+
+COMMIT
+```
+
+Enable forwarding on the firewall:
+
+```bash
+sudo ufw default allow FORWARD
+sudo service ufw restart
+```
+
+Restart the server.
