@@ -12,9 +12,9 @@ export SERVER_NAME="openvpn-poc"
 export SERVER_DOMAIN="example.com"
 export SERVER_WWW_PROTOCOL="http"
 
-# Uncomment the lines below, to enable publishing of CA certificates and/or profiles.
-#export SERVER_CA_DIRECTORY="/var/www/html"
-#export SERVER_PROFILE_DIRECTORY="/var/www/html/profiles"
+# AIA, CRL and published profiles location
+export SERVER_CA_DIRECTORY="/var/www/html"
+export SERVER_PROFILE_DIRECTORY="/var/www/html/profiles"
 
 # OpenVPN server information
 export OPENVPN_BASEDIR="/etc/openvpn/server"

@@ -103,13 +103,17 @@ else
     fi
 
     echo "NOTICE: Issued a certificate for $SERVER_FQDN."
-    # Exit, if only X.509 certificate was requested
-    test -n "$CERT_ONLY" && exit 0
 fi
 
-# Check, if the OpenVPN has been installed, and copy files.
-if [ -d "$OPENVPN_BASEDIR"  ]
+if [ -n "$OPENVPN_BASEDIR" ] && [ -z "$CERT_ONLY" ]
 then
+    # Check, if the OpenVPN has been installed, and copy files.
+    if [ ! -d "$OPENVPN_BASEDIR" ]
+    then
+        echo "ERROR: OpenVPN configuration directory \"$OPENVPN_BASEDIR\" does not exit."
+        exit 1
+    fi
+
     echo "Installing or updating OpenVPN server files..."
 
     # Create a directory for client configuration files
@@ -161,8 +165,5 @@ then
     fi
 
     sudo cp -uv "$CA_ROOT/$CA_NAME.crt" "$OPENVPN_CA_CERT"
-    sudo cp -uv "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"
-else
-    echo "ERROR: OpenVPN configuration directory \"$OPENVPN_BASEDIR\" does not exit."
-    exit 1
+    sudo cp -uv "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"        
 fi

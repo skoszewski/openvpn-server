@@ -243,3 +243,128 @@ build_subject_name() {
 
     return 0
 }
+
+# Network functions
+_convert_mask_byte() {
+    case $1 in
+        8)
+            echo "255"
+            ;;
+        7)
+            echo "254"
+            ;;
+        6)
+            echo "252"
+            ;;
+        5)
+            echo "248"
+            ;;
+        4)
+            echo "240"
+            ;;
+        3)
+            echo "224"
+            ;;
+        2)
+            echo "192"
+            ;;
+        1)
+            echo "128"
+            ;;
+        *)
+            echo "0"
+            ;;
+    esac
+}
+
+convert_mask_length_to_bytes() {
+    local b=$1
+    local m1=0
+    local m2=0
+    local m3=0
+    local m4=0
+
+    if [ $b -ge 32 ]
+    then
+        m1=255
+        m2=255
+        m3=255
+        m4=255
+    elif [ $b -ge 24 ]
+    then
+        b=$(($b - 24))
+        m1=255
+        m2=255
+        m3=255
+        m4=$(_convert_mask_byte $b)
+    elif [ $b -ge 16 ]
+    then
+        b=$(($b - 16))
+        m1=255
+        m2=255
+        m3=$(_convert_mask_byte $b)
+    elif [ $b -ge 8 ]
+    then
+        b=$(($b - 8))
+        m1=255
+        m2=$(_convert_mask_byte $b)
+    else
+        m1=$(_convert_mask_byte $b)
+    fi
+
+    echo "$m1.$m2.$m3.$m4"
+}
+
+calculate_network_from_ip() {
+    local ip1=$(echo $1 | cut -d. -f1)
+    local ip2=$(echo $1 | cut -d. -f2)
+    local ip3=$(echo $1 | cut -d. -f3)
+    local ip4=$(echo $1 | cut -d. -f4)
+
+    local m1=$(echo $2 | cut -d. -f1)
+    local m2=$(echo $2 | cut -d. -f2)
+    local m3=$(echo $2 | cut -d. -f3)
+    local m4=$(echo $2 | cut -d. -f4)
+
+    local b1=$(($ip1 & $m1))
+    local b2=$(($ip2 & $m2))
+    local b3=$(($ip3 & $m3))
+    local b4=$(($ip4 & $m4))
+
+    echo "$b1.$b2.$b3.$b4"
+}
+
+calculate_number_of_hosts() {
+    local b=$1
+
+    if [ $b -lt 31 ] && [ $b -ge 0 ]
+    then
+        echo $((2**(32-$b) - 2))
+    else
+        echo 0
+    fi
+}
+
+convert_quadbytes_to_integer() {
+    local ip1=$(echo $1 | cut -d. -f1)
+    local ip2=$(echo $1 | cut -d. -f2)
+    local ip3=$(echo $1 | cut -d. -f3)
+    local ip4=$(echo $1 | cut -d. -f4)
+
+    echo $((2**24 * $ip1 + 2**16 * $ip2 + 2**8 * $ip3 + $ip4))
+}
+
+convert_integer_to_quadbytes() {
+    local i=$1
+
+    n1=$(( $i / (2**24) ))
+    i=$(( $i - $n1 * 2**24 ))
+
+    n2=$(( $i / (2**16) ))
+    i=$(( $i - $n2 * 2**16 ))
+
+    n3=$(( $i / (2**8) ))
+    n4=$(( $i - $n3 * 2**8 ))
+
+    echo "$n1.$n2.$n3.$n4"
+}
