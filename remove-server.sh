@@ -5,7 +5,7 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 [ -s <server_fqdn> ]"
+    echo "Usage: $(basename $0) [ -s <server_fqdn> ]"
 }
 
 while getopts "rs:ch" option

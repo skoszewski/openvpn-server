@@ -3,7 +3,7 @@
 . functions.sh
 
 usage() {
-    echo "Usage: $0 -r <request_file>"
+    echo "Usage: $(basename $0) -r <request_file>"
 }
 
 while getopts "r:h" option

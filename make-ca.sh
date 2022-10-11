@@ -4,7 +4,7 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 [ -s ] [ -r ] [ -c <certificate_file> ]"
+    echo "Usage: $(basename $0) [ -s ] [ -r ] [ -c <certificate_file> ]"
 }
 
 unset SUB_CA ROOT_CA CERT_FILE

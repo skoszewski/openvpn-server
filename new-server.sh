@@ -5,7 +5,8 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 [ -s <server_fqdn> ] [ -r ] [ -c ] [ -n ] [ -d <certificate description> ]"
+    echo "Usage: $(basename $0) [ -s <server_fqdn> ] [ -r ] [ -c ] [ -o ] ..."
+    echo "       [ -d <certificate description> ]"
 }
 
 make_dh() {
@@ -20,7 +21,7 @@ make_ta_key() {
 
 unset ROOT_CA COPY_ONLY SUBJ_DESC CERT_ONLY
 
-while getopts "rs:chd:" option
+while getopts "rs:cd:oh" option
 do
     case $option in
         r)
@@ -43,7 +44,7 @@ do
         d)
             SUBJ_DESC="$OPTARG"
             ;;
-        n)
+        o)
             CERT_ONLY=1
             ;;
         h)
@@ -165,5 +166,5 @@ then
     fi
 
     sudo cp -uv "$CA_ROOT/$CA_NAME.crt" "$OPENVPN_CA_CERT"
-    sudo cp -uv "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"        
+    sudo cp -uv "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"
 fi

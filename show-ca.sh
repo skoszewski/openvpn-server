@@ -3,7 +3,7 @@
 . functions.sh
 
 usage() {
-    echo "Usage: $0 { -u | -c }"
+    echo "Usage: $(basename $0) { -u | -c }"
 }
 
 # Check, if the environment has been sourced. Stop, if not.

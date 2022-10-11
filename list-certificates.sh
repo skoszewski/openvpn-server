@@ -4,7 +4,7 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 [ -f <client_filter> ] [ -c ]"
+    echo "Usage: $(basename $0) [ -f <client_filter> ] [ -c ]"
     echo ""
     echo "       NOTICE: The <client_filter> is an extended regular expression."
 }

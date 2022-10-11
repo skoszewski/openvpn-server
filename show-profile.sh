@@ -3,9 +3,9 @@
 . functions.sh
 
 usage() {
-    echo "Usage: $0 { -n <client_name> | -b <base_name> } [ -d <dirname> ]"
-    echo "          [ -f <filename> | -f - | -f ! ] [ -u <URL path> ]"
-    echo "          [ -p tcp|udp ] [ -P <n> ]"
+    echo "Usage: $(basename $0) { -n <client_name> | -b <base_name> } [ -d <dirname> ]"
+    echo "       [ -f <filename> | -f - | -f ! ] [ -u <URL path> ]"
+    echo "       [ -p tcp|udp ] [ -P <n> ]"
 }
 
 check_cert() {

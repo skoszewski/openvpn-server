@@ -4,7 +4,8 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 { -e | <ca_certificate_file> <crl_file> } [ -d <openvpn_server_config_dir> ] [ -H ] [ -c ]"
+    echo "Usage: $(basename $0) { -e | <ca_certificate_file> <crl_file> } ..."
+    echo "       [ -d <openvpn_server_config_dir> ] [ -H ] [ -c ]"
 }
 
 unset USE_HASH_AS_NAME GEN_CRL

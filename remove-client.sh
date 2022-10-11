@@ -4,7 +4,7 @@
 
 # Define functions
 usage() {
-    echo "Usage: $0 -n { <client_name> | -b <base_name> }"
+    echo "Usage: $(basename $0) -n { <client_name> | -b <base_name> }"
 }
 
 while getopts "n:b:h" option
