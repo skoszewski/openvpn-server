@@ -5,23 +5,15 @@
 
 # Define functions
 usage() {
-    echo "Usage: $(basename $0) [ -s <server_fqdn> ] [ -r ] [ -c ] [ -o ] ..."
-    echo "       [ -d <certificate description> ]"
+    echo "Usage: $(basename $0) [ -s <server_fqdn> ] [ -r ] [ -c ] [ -o ] [ -f ] ..."
+    echo "       [ -t ] [ -n <n_vpn_processes> ] [ -d <certificate description> ] ..."
+    echo "       [ -a <network/mask> ] [ -i <interface_ip> ] [ -l <network/mask> ] ... "
 }
 
-make_dh() {
-    openssl dhparam -out "$CA_ROOT/dh.pem" 2048
-    sudo cp -uv "$CA_ROOT/dh.pem" "$OPENVPN_BASEDIR/dh.pem"
-}
+unset FORCE ROOT_CA COPY_ONLY SUBJ_DESC CERT_ONLY TUNNEL_ALL
+unset N_VPN_PROCESSES ADDRESS_SPACE INTERFACE_IP LOCAL_NETWORK
 
-make_ta_key() {
-    openvpn --genkey --secret "$CA_ROOT/ta.key"
-    sudo cp -uv "$CA_ROOT/ta.key" "$OPENVPN_BASEDIR/ta.key"
-}
-
-unset ROOT_CA COPY_ONLY SUBJ_DESC CERT_ONLY
-
-while getopts "rs:cd:oh" option
+while getopts "hs:rcoftn:d:a:i:l:" option
 do
     case $option in
         r)
@@ -47,6 +39,35 @@ do
         o)
             CERT_ONLY=1
             ;;
+        f)
+            FORCE=1
+            ;;
+        n)
+            N_VPN_PROCESSES="$OPTARG"
+            ;;
+        a)
+            if echo "$OPTARG" | grep -q -v -E '^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$'
+            then
+                echo "ERROR: Please enter the VPN address-space in the format of a.b.c.d/n."
+                exit 1
+            fi
+            ADDRESS_SPACE="$OPTARG"
+            ;;
+        i)
+            INTERFACE_IP="$OPTARG"
+            ;;
+
+        l)
+            if echo "$OPTARG" | grep -q -v -E '^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$'
+            then
+                echo "ERROR: Please enter the local network in the format of a.b.c.d/n."
+                exit 1
+            fi
+            LOCAL_NETWORK="$OPTARG"
+            ;;
+        t)
+            TUNNEL_ALL=1
+            ;;
         h)
             usage
             exit 0
@@ -69,7 +90,7 @@ if check_cert "$CERT_FILE"
 then
     if [ -z "$COPY_ONLY" ]
     then
-        echo "ERROR: The certifcate for $SERVER_FQDN already exists."
+        echo "ERROR: The certificate for $SERVER_FQDN already exists."
         exit 1
     fi
 
@@ -108,53 +129,22 @@ fi
 
 if [ -n "$OPENVPN_BASEDIR" ] && [ -z "$CERT_ONLY" ]
 then
-    # Check, if the OpenVPN has been installed, and copy files.
-    if [ ! -d "$OPENVPN_BASEDIR" ]
+    echo "Creating server configuration files..."
+
+    # Check, if a DH exists
+    if [ ! -f "$CA_ROOT/private/${BASE_NAME}_dh.pem" ]
     then
-        echo "ERROR: OpenVPN configuration directory \"$OPENVPN_BASEDIR\" does not exit."
-        exit 1
+        # No - create it.
+        openssl dhparam -out "$CA_ROOT/private/${BASE_NAME}_dh.pem" 2048
     fi
 
-    echo "Installing or updating OpenVPN server files..."
-
-    # Create a directory for client configuration files
-    sudo mkdir -p "$OPENVPN_BASEDIR/client-config"
+    # Check, if the static TLS key exists
+    if [ ! -f "$CA_ROOT/private/${BASE_NAME}_ta.key" ]
+    then
+        openvpn --genkey --secret "$CA_ROOT/private/${BASE_NAME}_ta.key"
+    fi
     
-    # Generate DH parameter file.
-    if [ -f "$OPENVPN_BASEDIR/dh.pem" ]
-    then
-        read -p "The Diffie-Helman parameter file already exists, would you like to recreate it? " ans
-        if echo $ans | grep -q '^[Yy]'
-        then
-            make_dh
-        else
-            # Copy already existing DH to CA_ROOT
-            sudo cat "$OPENVPN_BASEDIR/dh.pem" > "$CA_ROOT/dh.pem"
-        fi
-    else
-        make_dh
-    fi
-
-    # Generate static TLS key
-    if [ -f "$OPENVPN_BASEDIR/ta.key" ]
-    then
-        read -p "The OpenVPN static TLS key already exists, would you like to recreate it? " ans
-        if echo $ans | grep -q '^[Yy]'
-        then
-            make_ta_key
-        else
-            # Copy already existing TLS key to CA_ROOT
-            sudo cat "$OPENVPN_BASEDIR/ta.key" > "$CA_ROOT/ta.key"
-        fi
-    else
-        make_ta_key
-    fi
-
-    # Copy server certificate and key
-    sudo cp -uv "$CERT_FILE" "$OPENVPN_BASEDIR/server.crt"
-    sudo cp -uv "$KEY_FILE" "$OPENVPN_BASEDIR/server.key"
-
-    # Copy CA certificate and CRL
+    # Define CA certificate and CRL paths
     if [ -z "$ROOT_CA" ]
     then
         OPENVPN_CA_CERT="$OPENVPN_BASEDIR/ca.crt"
@@ -165,6 +155,172 @@ then
         OPENVPN_CRL="$OPENVPN_BASEDIR/$HASH.r0"
     fi
 
-    sudo cp -uv "$CA_ROOT/$CA_NAME.crt" "$OPENVPN_CA_CERT"
-    sudo cp -uv "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"
+    ### Create the common configuration file.
+    cat > "$CA_ROOT/private/${BASE_NAME}_common.inc" <<END
+# Basic configuration
+dev tun
+topology subnet
+
+mode server
+tls-server
+push "topology subnet"
+client-config-dir client-config
+
+auth SHA256
+cipher AES-256-CBC
+
+# Authentication and encryption
+;capath .
+ca ca.crt
+crl-verify crl.pem
+cert server.crt
+key server.key
+dh dh.pem
+tls-auth ta.key 0
+
+# Other
+keepalive 10 120
+persist-key
+persist-tun
+
+user nobody
+group nogroup
+
+verb 3
+END
+
+    # Push route to the local network, if specified.
+    if [ -n "$LOCAL_NETWORK" ]
+    then
+        LOCAL_NET_ADDRESS=$( echo $LOCAL_NETWORK | cut -d/ -f1 )
+        LOCAL_NET_MASK=$( echo $LOCAL_NETWORK | cut -d/ -f2 )
+        MASK=$( convert_mask_length_to_bytes $LOCAL_NET_MASK )
+
+        cat >> "$CA_ROOT/private/${BASE_NAME}_common.inc" <<END
+
+push "route $LOCAL_NET_ADDRESS $MASK"
+END
+    fi
+
+    # Push redirect-gateway option to enable tunnel-all functionality.
+    if [ -n "$TUNNEL_ALL" ]
+    then
+        cat >> "$CA_ROOT/private/${BASE_NAME}_common.inc" <<END
+
+push "redirect-gateway def1"
+END
+    fi
+    
+    # Check, if the server is running multiple interfaces
+    if [ $( ip -4 addr show | awk '/^\s+inet/ && $2 !~ /^127\.0\.0/ { print $2 }' | wc -l ) -gt 1 ]
+    then
+        echo "WARNING: More than one active interface detected. Using only the first one."
+        echo "         Please check the file and adjust interface IP, if necessary."
+    fi
+
+    # Get the IP address of the first non-local interface.
+    INTERFACE_IP=${INTERFACE_IP:-$( ip -4 addr show | awk '/^\s+inet/ && $2 !~ /^127\.0\.0/ { print $2 }' | head -1 | cut -d/ -f1 )}
+
+    # Check, if the number of VPN processes has been specified,
+    # and then generate configuration files.
+    if [ -n "$N_VPN_PROCESSES" ]
+    then
+        # Assign the default, if not specified.
+        ADDRESS_SPACE=${ADDRESS_SPACE:-10.0.0.0/24}
+
+        # Calculate the network address and the mask length
+        # Use default 10.0.0.0/24, if not specified.
+        NETWORK=$(echo $ADDRESS_SPACE | cut -d/ -f1)
+        NETMASK_LENGTH=$(echo $ADDRESS_SPACE | cut -d/ -f2)
+
+        # Calculate the number of bits that will create the
+        # required number of subnets.
+        n_bits=0
+
+        while [ $N_VPN_PROCESSES -gt $(( 2**$n_bits )) ]
+        do
+            n_bits=$(( $n_bits + 1))
+        done
+
+        # Adjust the netmask length to accommodate the number of subnets per VPN process.
+        NETMASK_LENGTH=$(( $NETMASK_LENGTH + $n_bits ))
+        SUBNET_IPS=$(( 2**(32 - $NETMASK_LENGTH) ))
+        N_HOSTS=$(( $SUBNET_IPS - 2))
+        NETMASK=$( convert_mask_length_to_bytes $NETMASK_LENGTH )
+
+        # Convert network address to a number
+        network_n=$( convert_quadbytes_to_integer $NETWORK )
+
+        # Calculate subnets
+        i=0
+        while [ $i -lt $N_VPN_PROCESSES ]
+        do
+            INSTANCE_NAME="${SERVER_PROTOCOL}-${SERVER_PORT}"
+            test $i -gt 0 && INSTANCE_NAME="${INSTANCE_NAME}-$i"
+
+            # Build configuration file path.
+            CONFIG_FILE="$CA_ROOT/private/${BASE_NAME}_${INSTANCE_NAME}.conf"
+
+            SUBNET=$( convert_integer_to_quadbytes $network_n )
+
+            gw_a=$(( $network_n + 1 ))
+            pool_start_a=$(( $network_n + 2 ))
+            pool_end_a=$(( $network_n + $N_HOSTS ))
+            gw_ip=$( convert_integer_to_quadbytes $gw_a )
+            pool_start_ip=$( convert_integer_to_quadbytes $pool_start_a )
+            pool_end_ip=$( convert_integer_to_quadbytes $pool_end_a )
+
+            echo "Process #$(($i+1)): gateway IP: $gw_ip, pool start: $pool_start_ip, pool end: $pool_end_ip."
+
+            cat > "$CONFIG_FILE" <<END
+config common.inc
+
+local $INTERFACE_IP
+port $SERVER_PORT
+proto ${SERVER_PROTOCOL/tcp/tcp-server}
+
+ifconfig $gw_ip $NETMASK
+push "route-gateway $gw_ip"
+ifconfig-pool $pool_start_ip $pool_end_ip
+
+log /var/log/openvpn/${INSTANCE_NAME}.log
+END
+            if [ "$SERVER_PROTOCOL" = "udp" ]
+            then
+                echo "explicit-exit-notify" >> "$CONFIG_FILE"
+            fi
+            
+            i=$(( $i+1 ))
+            network_n=$(( $network_n + $SUBNET_IPS))
+        done
+    fi
+
+    # Create server specific iptables NAT configuration
+    cat > "$CA_ROOT/private/${BASE_NAME}_before_rules.ufw" <<END
+*nat
+:POSTROUTING ACCEPT [0:0]
+-A POSTROUTING -s $ADDRESS_SPACE -o $IFACE -j MASQUERADE
+
+COMMIT
+END
+    # Check, if the OpenVPN has been installed, and the configuration is for the local server.
+    if [ -d "$OPENVPN_BASEDIR" ] && [ $(hostname -f) = "$SERVER_FQDN" ]
+    then
+        echo "Installing or updating OpenVPN server files..."
+
+        # Create a directory for client configuration files
+        sudo mkdir -p "$OPENVPN_BASEDIR/client-config"
+
+        # Copy DH parameter file and TLS key file.
+        sudo cp -v "$CA_ROOT/private/${BASE_NAME}_dh.pem" "$OPENVPN_BASEDIR/dh.pem"
+        sudo cp -v "$CA_ROOT/private/${BASE_NAME}_ta.key" "$OPENVPN_BASEDIR/ta.key"
+        
+        # Copy server certificate and key
+        sudo cp -v "$CERT_FILE" "$OPENVPN_BASEDIR/server.crt"
+        sudo cp -v "$KEY_FILE" "$OPENVPN_BASEDIR/server.key"
+
+        # Copy the CA certificate and the CRL
+        sudo cp -v "$CA_ROOT/$CA_NAME.crt" "$OPENVPN_CA_CERT"
+        sudo cp -v "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"
+    fi
 fi

@@ -17,7 +17,7 @@ The scripts are:
 * `*.env` - shell environment initialization files.
 * `make-ca.sh` - make CA and issue a server certificate.
 * `new-client.sh` - register a new client and issue a certificate.
-* `new-server.sh` - register a new server and issue a certificate.
+* `new-server.sh` - register a new server and/or issue a certificate.
 * `list-certificates.sh` - list certificates issued to clients and servers with an optional name filter.
 * `show-certificate.sh` - print the certificate to the screen.
 * `show-profile.sh` - print the OpenVPN client profile to the screen or save it to a file.
