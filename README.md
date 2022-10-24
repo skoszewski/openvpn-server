@@ -4,9 +4,67 @@ OpenVPN Access Server is a product name of the OpenVPN Inc. The *OpenVPN access 
 
 The following documentation describes both the CA setup and the OpenVPN access server setup. We will use Ubuntu LTS operating system without any external software dependencies.
 
-Setup a VM running **18.04 LTS** or **20.04 LTS** Ubuntu releases. Copy the scripts to a directory not accessible by any other users.
+Setup a VM running **LTS** Ubuntu releases. Copy the scripts to a directory not accessible by any other users.
+
+```bash
+git clone https://github.com/skoszewski/openvpn-server $HOME/openvpn-server
+```
 
 > NOTE: You should not allow any non-admin logins to the server.
+
+## Operating System Configuration
+
+Install the required packages:
+
+```shell
+sudo apt -y install nginx ssl-cert openvpn
+```
+
+Install optional authentication modules, if you intend to use addition user authentication besides the client certificates.
+
+```shell
+sudo apt -y install openvpn-auth-ldap openvpn-auth-radius
+```
+
+> NOTE: The configuration of the OpenVPN user authentication is currently beyond the scope of that document.
+
+Use `snap` to install **certbot**.
+
+```bash
+sudo snap install certbot
+```
+
+> NOTE: On recent Ubuntu releases the certbot package is also available as a native Debian package, however the snap version may be newer and has more options.
+
+Register an account in Let's Encrypt replacing `e-mail-name@example.com` with a shared or service mailbox address. Do not use your personal e-mail, if possible.
+
+```bash
+sudo certbot register -m e-mail-name@example.com --agree-tos
+```
+
+Check, if the firewall is configured and allows HTTP and HTTPS connections:
+
+```bash
+sudo certbot certonly --dry-run -d servername.example.com
+```
+
+Correct issues, if necessary and request a certificate:
+
+```bash
+sudo certbot run --nginx -d servername.example.com
+```
+
+> NOTE: You can specify more than one name using multiple `-d` options. The first one will be used for the common name and the rest for additional subject alternative names.
+
+The `certbot` command will modify **NGINX** configuration and will install the certificate. If you have a custom configuration, use the following command:
+
+```bash
+sudo certbot certonly --webroot --webroot-path /var/www/html -d servername.example.com
+```
+
+and then install the certificate yourself. You will find it in `/etc/letsencrypt/live/servername.example.com`.
+
+Please refer to the [Official Certbot documentation](https://eff-certbot.readthedocs.io/en/stable/using.html), if you need to use a different scenario.
 
 ## CA Setup
 
@@ -160,21 +218,6 @@ certutil -addstore "Root" "<certfile.crt>"
 > NOTE: Close and reopen the web browsers using the system store (Edge, Chrome, Opera). The Firefox is not using the system certificate store and you have to add the certificate in the Firefox.
 
 ## OpenVPN Access Server Setup
-
-Install the `openvpn` package:
-
-```shell
-apt -y install openvpn
-```
-
-Install optional authentication modules, if you intend to use addition user authentication besides the client certificates.
-
-```shell
-apt -y install openvpn-auth-ldap
-apt -y install openvpn-auth-radius
-```
-
-> NOTE: The configuration of the OpenVPN user authentication is currently beyond the scope of that document.
 
 Uncomment the following line in the `/etc/sysctl.conf` file:
 
