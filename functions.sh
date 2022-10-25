@@ -164,7 +164,7 @@ show_profile() {
     test -f "$CA_ROOT/$CA_NAME.crt" || { echo "ERROR: Root CA certificate is missing."; return 1; }
     test -f "$CA_ROOT/certs/$BASE_NAME.crt" || { echo "ERROR: Certificate \"$BASE_NAME.crt\" is missing."; return 1; }
     test -f "$CA_ROOT/private/$BASE_NAME-key.txt" || { echo "ERROR: Private key \"$BASE_NAME-key.txt\" is missing."; return 1; }
-    test -f "$CA_ROOT/ta.key" || { echo "ERROR: TLS key is missing."; return 1; }
+    test -f "$CA_ROOT/private/${SERVER_FQDN//./_}_ta.key" || { echo "ERROR: TLS key is missing."; return 1; }
 
     # Compose and create or recreate the OpenVPN config file
     cat <<EOF
