@@ -65,7 +65,7 @@ then
 fi
 
 # Check, if the TLS key has been created.
-if [ ! -f "$CA_ROOT/ta.key" ]
+if [ ! -f "$CA_ROOT/private/${SERVER_FQDN//./_}_ta.key" ]
 then
     echo "ERROR: The TLS key is missing."
     exit 1
