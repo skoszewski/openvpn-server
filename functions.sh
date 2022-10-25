@@ -197,7 +197,7 @@ $(openssl rsa -in "$CA_ROOT/private/$BASE_NAME-key.txt" 2>&-)
 </key>
 
 <tls-auth>
-$(cat "$CA_ROOT/ta.key")
+$(cat "$CA_ROOT/private/${SERVER_FQDN//./_}_ta.key")
 </tls-auth>
 
 key-direction 1
