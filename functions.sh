@@ -372,9 +372,9 @@ convert_integer_to_quadbytes() {
 # Configure CP and MKDIR variables depending on effective id of the running user
 if [ $(id -u) -eq 0 ]
 then
-        export CP='cp'
-        export MKDIR='mkdir'
+    export CP='cp'
+    export MKDIR='mkdir'
 else
-        export CP='sudo cp'
-        export MKDIR='sudo mkdir'
+    export CP='sudo cp'
+    export MKDIR='sudo mkdir'
 fi
