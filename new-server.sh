@@ -312,15 +312,15 @@ END
         sudo mkdir -p "$OPENVPN_BASEDIR/client-config"
 
         # Copy DH parameter file and TLS key file.
-        sudo cp -v "$CA_ROOT/private/${BASE_NAME}_dh.pem" "$OPENVPN_BASEDIR/dh.pem"
-        sudo cp -v "$CA_ROOT/private/${BASE_NAME}_ta.key" "$OPENVPN_BASEDIR/ta.key"
+        sudo cp -uv "$CA_ROOT/private/${BASE_NAME}_dh.pem" "$OPENVPN_BASEDIR/dh.pem"
+        sudo cp -uv "$CA_ROOT/private/${BASE_NAME}_ta.key" "$OPENVPN_BASEDIR/ta.key"
         
         # Copy server certificate and key
-        sudo cp -v "$CERT_FILE" "$OPENVPN_BASEDIR/server.crt"
-        sudo cp -v "$KEY_FILE" "$OPENVPN_BASEDIR/server.key"
+        sudo cp -uv "$CERT_FILE" "$OPENVPN_BASEDIR/server.crt"
+        sudo cp -uv "$KEY_FILE" "$OPENVPN_BASEDIR/server.key"
 
         # Copy the CA certificate and the CRL
-        sudo cp -v "$CA_ROOT/$CA_NAME.crt" "$OPENVPN_CA_CERT"
-        sudo cp -v "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"
+        sudo cp -uv "$CA_ROOT/$CA_NAME.crt" "$OPENVPN_CA_CERT"
+        sudo cp -uv "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"
     fi
 fi
