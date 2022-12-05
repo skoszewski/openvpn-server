@@ -346,6 +346,21 @@ sudo systemctl status openvpn-server@tcp-443
 
 Check for errors in web server or OpenVPN server logs.
 
+Finally schedule regular CRL updates. OpenVPN clients may refuse to connect if the CRL is outdated.
+
+Create a script in `/etc/cron.daily` named `update-openvpn-crl` and put the following commands in it:
+
+```bash
+#!/bin/bash
+
+SERVER_DIR="/home/ubuntu/openvpn-server"
+
+source $SERVER_DIR/ca.env
+$SERVER_DIR/update-crl.sh -e -c >/dev/null 2>&1
+```
+
+Adjust `SERVER_DIR` to the directory where the scripts are checked out.
+
 ### Redirect all the traffic through the VPN
 
 Add the following command to `common.inc` file:
