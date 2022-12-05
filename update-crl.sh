@@ -95,9 +95,9 @@ echo "Updating files..."
 if [ -n "$USE_HASH_AS_NAME" ]
 then
     HASH="$(openssl x509 -in "$CA_CERT_FILE" -noout -subject_hash)"
-    sudo cp -uv "$CA_CERT_FILE" "$OPENVPN_BASEDIR/$HASH.0"
-    sudo cp -uv "$CA_CRL_FILE" "$OPENVPN_BASEDIR/$HASH.r0"
+    $CP -uv "$CA_CERT_FILE" "$OPENVPN_BASEDIR/$HASH.0"
+    $CP -uv "$CA_CRL_FILE" "$OPENVPN_BASEDIR/$HASH.r0"
 else
-    sudo cp -uv "$CA_CERT_FILE" "$OPENVPN_BASEDIR/ca.crt"
-    sudo cp -uv "$CA_CRL_FILE" "$OPENVPN_BASEDIR/crl.pem"
+    $CP -uv "$CA_CERT_FILE" "$OPENVPN_BASEDIR/ca.crt"
+    $CP -uv "$CA_CRL_FILE" "$OPENVPN_BASEDIR/crl.pem"
 fi

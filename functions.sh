@@ -99,7 +99,7 @@ publish_crl_and_aia() {
     for file in "$CA_ROOT/$CA_NAME".{crt,crl}
     do
         # Do a copy as root.
-        sudo cp -uv $file "$DIR/"
+        $CP -uv $file "$DIR/"
     done
 }
 
@@ -113,7 +113,7 @@ gen_crl() {
         # Copy CRL file to the OpenVPN server configuration directory
         if [ -d "$OPENVPN_BASEDIR" ]
         then
-            sudo cp -v "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_BASEDIR/crl.pem"
+            $CP -v "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_BASEDIR/crl.pem"
         fi
     else
         echo "ERROR: Cannot generate a new CRL."
@@ -132,7 +132,7 @@ is_sub_ca() {
     else
         CA_CERT_FILE="$CA_ROOT/$CA_NAME.crt"
     fi
-    echo "DEBUG: CA_CERT_FILE=$CA_CERT_FILE"
+
     # SUBJECT_HASH=$(openssl x509 -in "$CA_CERT_FILE" -noout -subject_hash)
     # ISSUER_HASH=$(openssl x509 -in "$CA_CERT_FILE" -noout -issuer_hash)
     # test $SUBJECT_HASH != $ISSUER_HASH
@@ -368,3 +368,13 @@ convert_integer_to_quadbytes() {
 
     echo "$n1.$n2.$n3.$n4"
 }
+
+# Configure CP and MKDIR variables depending on effective id of the running user
+if [ $(id -u) -eq 0 ]
+then
+        export CP='cp'
+        export MKDIR='mkdir'
+else
+        export CP='sudo cp'
+        export MKDIR='sudo mkdir'
+fi

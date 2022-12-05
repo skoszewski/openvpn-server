@@ -309,18 +309,18 @@ END
         echo "Installing or updating OpenVPN server files..."
 
         # Create a directory for client configuration files
-        sudo mkdir -p "$OPENVPN_BASEDIR/client-config"
+        $MKDIR -p "$OPENVPN_BASEDIR/client-config"
 
         # Copy DH parameter file and TLS key file.
-        sudo cp -uv "$CA_ROOT/private/${BASE_NAME}_dh.pem" "$OPENVPN_BASEDIR/dh.pem"
-        sudo cp -uv "$CA_ROOT/private/${BASE_NAME}_ta.key" "$OPENVPN_BASEDIR/ta.key"
+        $CP -uv "$CA_ROOT/private/${BASE_NAME}_dh.pem" "$OPENVPN_BASEDIR/dh.pem"
+        $CP -uv "$CA_ROOT/private/${BASE_NAME}_ta.key" "$OPENVPN_BASEDIR/ta.key"
         
         # Copy server certificate and key
-        sudo cp -uv "$CERT_FILE" "$OPENVPN_BASEDIR/server.crt"
-        sudo cp -uv "$KEY_FILE" "$OPENVPN_BASEDIR/server.key"
+        $CP -uv "$CERT_FILE" "$OPENVPN_BASEDIR/server.crt"
+        $CP -uv "$KEY_FILE" "$OPENVPN_BASEDIR/server.key"
 
         # Copy the CA certificate and the CRL
-        sudo cp -uv "$CA_ROOT/$CA_NAME.crt" "$OPENVPN_CA_CERT"
-        sudo cp -uv "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"
+        $CP -uv "$CA_ROOT/$CA_NAME.crt" "$OPENVPN_CA_CERT"
+        $CP -uv "$CA_ROOT/$CA_NAME.crl" "$OPENVPN_CRL"
     fi
 fi
