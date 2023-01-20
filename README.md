@@ -320,9 +320,25 @@ ifconfig-pool 192.168.234.100 192.168.234.199
 log /var/log/openvpn/tcp-443.log
 ```
 
-> NOTE: Use the `post-share` directive only if you intend to use port sharing with the web server.
+> NOTE: Use the `port-share` directive only if you intend to use port sharing with the web server.
 
 If you need to share the 443 port with the web server, configure it to bind to the local interface only.
+
+Add lines with networks you want to route through VPN connection:
+
+```
+push "route 10.1.1.0 255.255.255.0"
+push "route 10.1.2.0 255.255.255.0"
+```
+
+Optionally add DNS configuration:
+
+```
+push "dhcp-option DNS 10.1.1.5"
+push "dhcp-option DNS 10.1.1.6"
+```
+
+> NOTE: Remember to disable **DNS fallback** in *Advanced Settings* of the **OpenVPN Connect** client. You won't be able to resolve DNS names for machines accessible through the VPN tunnel.
 
 **NGINX**: edit the `/etc/nginx/sites-available/default` file and find the server configuration. Add loopback interface addresses to `listen` directives.
 
@@ -345,6 +361,21 @@ sudo systemctl status openvpn-server@tcp-443
 ```
 
 Check for errors in web server or OpenVPN server logs.
+
+Finally schedule regular CRL updates. OpenVPN clients may refuse to connect if the CRL is outdated.
+
+Create a script in `/etc/cron.daily` named `update-openvpn-crl` and put the following commands in it:
+
+```bash
+#!/bin/bash
+
+SERVER_DIR="/home/ubuntu/openvpn-server"
+
+source $SERVER_DIR/ca.env
+$SERVER_DIR/update-crl.sh -e -c >/dev/null 2>&1
+```
+
+Adjust `SERVER_DIR` to the directory where the scripts are checked out.
 
 ### Redirect all the traffic through the VPN
 
