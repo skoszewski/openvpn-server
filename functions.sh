@@ -172,7 +172,7 @@ show_profile() {
 setenv PROFILE_NAME $BASE_NAME
 client
 dev tun
-proto ${SERVER_PROTOCOL/tcp/tcp-server}
+proto $SERVER_PROTOCOL
 remote $SERVER_FQDN $SERVER_PORT
 data-ciphers AES-256-GCM:AES-256-CBC
 auth SHA256
