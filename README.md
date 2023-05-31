@@ -217,7 +217,7 @@ certutil -addstore "Root" "<certfile.crt>"
 
 > NOTE: Close and reopen the web browsers using the system store (Edge, Chrome, Opera). The Firefox is not using the system certificate store and you have to add the certificate in the Firefox.
 
-## OpenVPN Access Server Setup
+## OpenVPN server setup
 
 Uncomment the following line in the `/etc/sysctl.conf` file:
 
