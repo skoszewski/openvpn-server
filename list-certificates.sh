@@ -11,9 +11,9 @@ usage() {
 
 # An excellent description of console escape sequences may be found 
 # in the following answer: https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
-unset START_HIGHLIGHT RESET_CONSOLE
+unset START_HIGHLIGHT RESET_CONSOLE VERBOSE EXPIRY_DATE
 
-while getopts "chf:" option
+while getopts "chvf:" option
 do
     case $option in
         c)
@@ -22,6 +22,9 @@ do
             ;;
         f)
             CLIENT_FILTER="$OPTARG"
+            ;;
+        v)
+            VERBOSE=1
             ;;
         h)
             usage
@@ -58,8 +61,21 @@ cat $CA_ROOT/index.txt | grep -i '^v' | cut -d/ -f2- | while read line
                 then
                     echo "[$BASE_NAME]"
                 else
+                    if [ -n "$VERBOSE" ]
+                    then
+                        # Find the expiry date
+                        EXPIRY_DATE=$(date --date "$(openssl x509 -in $CA_ROOT/certs/${BASE_NAME//./_}.crt -dates -noout| grep '^notAfter' | cut -d= -f2)" "+%F %T")
+                    fi
+                    NOW=$(date "+%F %T")
+
+                    if [[ "$EXPIRY_DATE" > "$NOW" ]] || [[ "$EXPIRY_DATE" == "$NOW" ]]
+                    then
+                        EXPIRY_TEXT=" expires on $EXPIRY_DATE"
+                    else
+                        EXPIRY_TEXT=" expired!"
+                    fi
                     # Output the client name and base name (the server certificate will have dots in CN)
-                    echo -e "$CLIENT_NAME [${START_HIGHLIGHT}${BASE_NAME//./_}${RESET_CONSOLE}]"
+                    echo -e "$CLIENT_NAME [${START_HIGHLIGHT}${BASE_NAME//./_}${RESET_CONSOLE}]$EXPIRY_TEXT"
                 fi
             done
     done
