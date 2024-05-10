@@ -65,14 +65,14 @@ cat $CA_ROOT/index.txt | grep -i '^v' | cut -d/ -f2- | while read line
                     then
                         # Find the expiry date
                         EXPIRY_DATE=$(date --date "$(openssl x509 -in $CA_ROOT/certs/${BASE_NAME//./_}.crt -dates -noout| grep '^notAfter' | cut -d= -f2)" "+%F %T")
-                    fi
-                    NOW=$(date "+%F %T")
+                        NOW=$(date "+%F %T")
 
-                    if [[ "$EXPIRY_DATE" > "$NOW" ]] || [[ "$EXPIRY_DATE" == "$NOW" ]]
-                    then
-                        EXPIRY_TEXT=" expires on $EXPIRY_DATE"
-                    else
-                        EXPIRY_TEXT=" expired!"
+                        if [[ "$EXPIRY_DATE" > "$NOW" ]] || [[ "$EXPIRY_DATE" == "$NOW" ]]
+                        then
+                            EXPIRY_TEXT=" expires on $EXPIRY_DATE"
+                        else
+                            EXPIRY_TEXT=" expired!"
+                        fi
                     fi
                     # Output the client name and base name (the server certificate will have dots in CN)
                     echo -e "$CLIENT_NAME [${START_HIGHLIGHT}${BASE_NAME//./_}${RESET_CONSOLE}]$EXPIRY_TEXT"
