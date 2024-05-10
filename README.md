@@ -139,7 +139,7 @@ Usage:
 * `base_name` - an optional base name for certificate and OpenVPN profile files. You can only use lower case letters, numbers and an underscore. The name must start with a letter. The base name will be automatically generated from the client name if a `base_name` is not specified.
 * `device_serial_number` - the device's serial number.
 
-The certificate file will be placed in `<ca_root>/certs` directory, and the private key in `<ca_root>/private`. OpenVPN configuration file is dynamically generated and printed to the screen using the `show-profile.sh` script. The script can also save the profile to the file and optionally calculate download URL, if a publishing directory is configured. Use `-f !` parameter to generate file name based on certificate cryptographics checksum, or `-f -` to generate a random profile name.
+The certificate file will be placed in `<ca_root>/certs` directory, and the private key in `<ca_root>/private`. OpenVPN configuration file is dynamically generated and printed to the screen using the `show-profile.sh` script. The script can also save the profile to the file and optionally calculate download URL, if a publishing directory is configured. The file name will be a random string. Use `-f !` parameter to generate file name based on certificate checksum. Use `-f -` to use the base name for the filename - not recommended.
 
 Ensure that OpenVPN configuration is kept secret because it enables the workstation to connect to the VPN without any other user input. The file should be installed in a directory accessible only to administrators, for example: `C:\Program Files\OpenVPN Connect\profiles` or `C:\Program Files\OpenVPN\config`. You can secure the folder with the following commands:
 

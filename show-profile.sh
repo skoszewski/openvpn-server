@@ -125,9 +125,9 @@ if [ -z "$SAVE_PROFILE" ]
 then
     show_profile
 else
-    test -z "$OUTPUT_FILE" && OUTPUT_FILE="$BASE_NAME.ovpn"
+    test -z "$OUTPUT_FILE" && OUTPUT_FILE="$(openssl rand -hex 12).ovpn"
     test "$OUTPUT_FILE" = "!" && OUTPUT_FILE="$(cat "$CA_ROOT/certs/$BASE_NAME.crt" | sha256sum | head -c 24).ovpn"
-    test "$OUTPUT_FILE" = "-" && OUTPUT_FILE="$(openssl rand -hex 12).ovpn"
+    test "$OUTPUT_FILE" = "-" && OUTPUT_FILE="$BASE_NAME.ovpn"
     test -n "$URL_PREFIX" && DOWNLOAD_URL="$URL_PREFIX/$OUTPUT_FILE"
     test -n "$OUTPUT_DIR" && OUTPUT_FILE="$OUTPUT_DIR/$OUTPUT_FILE"
     
