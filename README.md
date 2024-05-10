@@ -187,7 +187,7 @@ An optional `-d <dirname>` parameter istructs the script to save the profile to 
 
 If you have configured the web server and a directory to publish profiles, you can use `-u` parameter to calculate an URL where the profile can be downloaded. The `-u` take an argument - an URL path that will be added to server's FQDN before appending the profile name.
 
-The `-p` and `-P` parameters allows overriding default `udp/1194` used in a profile.
+The `-p` and `-P` parameters allows overriding default `udp/1194` used in a profile. Use `-p tcp -P 443` to use OpenVPN over HTTPS port with port sharing feature.
 
 ### Permanently disabling clients
 
@@ -196,7 +196,7 @@ The script `remove-client.sh` will revoke the client's certificate and remove Op
 Usage:
 
 ```
-./remove-client.sh -n { <client_name> | -b <base_name> }"
+./remove-client.sh { -n <client_name> | -b <base_name> }"
 ```
 
 ### Print the certificate revocation list
@@ -214,6 +214,18 @@ On Windows use the following command to add the certificate to machine trusted r
 ```batch
 certutil -addstore "Root" "<certfile.crt>"
 ```
+
+### Renewing certificates
+
+The certificates will expire after a specified time period. Use the following procedure to renew client certificate.
+
+1. Use `list-certificates.sh` script to look for client.
+1. Use `show-certificate.sh` script to display client properties like the name, the base name and the serial number.
+1. Use `remove-client.sh` script to revoke the client's certificate and remove the configuration.
+1. Use `new-client.sh` script to create a new certificate for the client.
+1. Use `show-profile.sh` script to display or publish the OpenVPN profile for the client.
+
+Use `remove-server.sh` and `new-server.sh` without any parameters to renew the server certificate.
 
 > NOTE: Close and reopen the web browsers using the system store (Edge, Chrome, Opera). The Firefox is not using the system certificate store and you have to add the certificate in the Firefox.
 

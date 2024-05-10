@@ -21,9 +21,9 @@ done
 
 if [ -z "$BASE_NAME" ]
 then
-    echo "ERROR: Certificate base name not specified."
-    usage
-    exit 1
+    # Certificate name not specified, show the default server certificate, if exists.
+    echo "Showing the default server certificate:"
+    BASE_NAME="${SERVER_FQDN//./_}"
 fi
 
 # Check, if the certificate is present.
