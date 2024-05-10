@@ -183,7 +183,7 @@ Usage: $0 { -n <client_name> | -b <base_name> } [ -d <dirname> ]
 
 The `client_name` or `base_name` must be specified.
 
-An optional `-d <dirname>` parameter istructs the script to save the profile to a file. The parameter takes a destination directory path. The file name is a random strin by default. Use `-f` to specify your own name or a special one. `!` used with `-f` will create a name based on certificate hash and the `-` will use the base name for the file name. The latter option is not recommended for Web publishing because it allows anyone to easily guess the profile download URL.
+An optional `-d <dirname>` parameter instructs the script to save the profile to a file. The parameter takes a destination directory path. The file name is a random string by default. Use `-f` to specify your own name or a special one. `!` used with `-f` will create a name based on certificate hash and the `-` will use the base name for the file name. The latter option is not recommended for Web publishing because it allows anyone to easily guess the profile download URL.
 
 If you have configured the web server and a directory to publish profiles, you can use `-u` parameter to calculate an URL where the profile can be downloaded. The `-u` take an argument - an URL path that will be added to server's FQDN before appending the profile name.
 
