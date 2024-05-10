@@ -141,7 +141,7 @@ then
     # Check, if the static TLS key exists
     if [ ! -f "$CA_ROOT/private/${BASE_NAME}_ta.key" ]
     then
-        openvpn --genkey --secret "$CA_ROOT/private/${BASE_NAME}_ta.key"
+        openvpn --genkey secret "$CA_ROOT/private/${BASE_NAME}_ta.key"
     fi
     
     # Define CA certificate and CRL paths
