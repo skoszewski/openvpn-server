@@ -139,7 +139,7 @@ Usage:
 * `base_name` - an optional base name for certificate and OpenVPN profile files. You can only use lower case letters, numbers and an underscore. The name must start with a letter. The base name will be automatically generated from the client name if a `base_name` is not specified.
 * `device_serial_number` - the device's serial number.
 
-The certificate file will be placed in `<ca_root>/certs` directory, and the private key in `<ca_root>/private`. OpenVPN configuration file is dynamically generated and printed to the screen using the `show-profile.sh` script. The script can also save the profile to the file and optionally calculate download URL, if a publishing directory is configured. The file name will be a random string. Use `-f !` parameter to generate file name based on certificate checksum. Use `-f -` to use the base name for the filename - not recommended.
+The certificate file will be placed in `<ca_root>/certs` directory, and the private key in `<ca_root>/private`. OpenVPN configuration file is dynamically generated and printed to the screen using the `show-profile.sh` script. Go to the [next section](#browsing-client-and-server-database) to read about how to use the script.
 
 Ensure that OpenVPN configuration is kept secret because it enables the workstation to connect to the VPN without any other user input. The file should be installed in a directory accessible only to administrators, for example: `C:\Program Files\OpenVPN Connect\profiles` or `C:\Program Files\OpenVPN\config`. You can secure the folder with the following commands:
 
@@ -183,7 +183,7 @@ Usage: $0 { -n <client_name> | -b <base_name> } [ -d <dirname> ]
 
 The `client_name` or `base_name` must be specified.
 
-An optional `-d <dirname>` parameter istructs the script to save the profile to a file. The parameter takes a destination directory path. The file name is `<base_name>.ovpn` by default. Use `-f` to specify your own name or a special one. `!` used with `-f` will create a certificate hash derived name and `-` a random one.
+An optional `-d <dirname>` parameter istructs the script to save the profile to a file. The parameter takes a destination directory path. The file name is a random strin by default. Use `-f` to specify your own name or a special one. `!` used with `-f` will create a name based on certificate hash and the `-` will use the base name for the file name. The latter option is not recommended for Web publishing because it allows anyone to easily guess the profile download URL.
 
 If you have configured the web server and a directory to publish profiles, you can use `-u` parameter to calculate an URL where the profile can be downloaded. The `-u` take an argument - an URL path that will be added to server's FQDN before appending the profile name.
 
